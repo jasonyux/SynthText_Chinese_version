@@ -1,4 +1,3 @@
-more_font/方正细黑一简体.ttf
-more_font/HYPPTiJ.ttf
-more_font/楷体_GB2312.ttf
-more_font/HYWaiWaiTiJ.ttf
+ubuntu/Ubuntu-Bold.ttf
+ubuntucondensed/UbuntuCondensed-Regular.ttf
+ubuntumono/UbuntuMono-Regular.ttf

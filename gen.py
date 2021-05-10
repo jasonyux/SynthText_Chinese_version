@@ -139,7 +139,8 @@ def main(viz=False):
       #  there are 2 estimates of depth (represented as 2 "channels")
       #  here we are using the second one (in some cases it might be
       #  useful to use the other one):
-      img_resize=img.resize(db['depth'][imname].shape)
+      #img_resize=img.resize(db['depth'][imname].shape)
+      img_resize=img.resize(db['depth'][imname].shape[1:3])
       depth = db['depth'][imname][:].T
       print 'depth shape,img shape',depth.shape,np.array(img).shape
       print 'depth info',depth

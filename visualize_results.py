@@ -49,6 +49,7 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0):
     plt.gca().set_xlim([0,W-1])
     plt.gca().set_ylim([H-1,0])
     plt.show(block=False)
+    plt.savefig("./test.png")
 
 def main(db_fname):
     db = h5py.File(db_fname, 'r')
@@ -71,5 +72,6 @@ def main(db_fname):
     db.close()
 
 if __name__=='__main__':
-    main('results/SynthText_8000.h5')
+    # main('results/SynthText_8000.h5')
+    main('results/SynthText.h5')
 

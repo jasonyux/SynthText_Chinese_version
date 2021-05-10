@@ -51,7 +51,8 @@ class FontColor(object):
         # convert color-means from RGB to LAB for better nearest neighbour
         # computations:
         self.colorsLAB = np.r_[self.colorsRGB[:,0:3], self.colorsRGB[:,6:9]].astype('uint8')
-        self.colorsLAB = np.squeeze(cv.cvtColor(self.colorsLAB[None,:,:],cv.cv.CV_RGB2Lab))
+        self.colorsLAB = np.squeeze(cv.cvtColor(self.colorsLAB[None,:,:],cv.COLOR_RGB2LAB))
+        # self.colorsLAB = np.squeeze(cv.cvtColor(self.colorsLAB[None,:,:],cv.cv.CV_RGB2Lab))
 
 
     def sample_normal(self, col_mean, col_std):
@@ -70,7 +71,8 @@ class FontColor(object):
         each of these is a 3-vector.
         """
         bg_orig = bg_mat.copy()
-        bg_mat = cv.cvtColor(bg_mat, cv.cv.CV_RGB2Lab)
+        # bg_mat = cv.cvtColor(bg_mat, cv.cv.CV_RGB2Lab)
+        bg_mat = cv.cvtColor(bg_mat, cv.COLOR_RGB2LAB)
         bg_mat = np.reshape(bg_mat, (np.prod(bg_mat.shape[:2]),3))
         bg_mean = np.mean(bg_mat,axis=0)
 
@@ -393,8 +395,10 @@ class Colorize(object):
         """
         bgo,txto = bg.copy(), txt_bg.copy()
         txt_mask = txt_mask.astype('bool')
-        bg = cv.cvtColor(bg.copy(), cv.cv.CV_RGB2Lab)
-        txt_bg = cv.cvtColor(txt_bg.copy(), cv.cv.CV_RGB2Lab)
+        # bg = cv.cvtColor(bg.copy(), cv.cv.CV_RGB2Lab)
+        bg = cv.cvtColor(bg.copy(), cv.COLOR_RGB2LAB)
+        # txt_bg = cv.cvtColor(txt_bg.copy(), cv.cv.CV_RGB2Lab)
+        txt_bg = cv.cvtColor(txt_bg.copy(), cv.COLOR_RGB2LAB)
         bg_px = bg[txt_mask,:]
         txt_px = txt_bg[txt_mask,:]
         bg_px[:,0] *= 100.0/255.0 #rescale - L channel

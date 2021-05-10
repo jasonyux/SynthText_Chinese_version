@@ -529,7 +529,7 @@ class TextSource(object):
                       'PARA':self.sample_para}
         files= os.listdir(fn)
         files=files[0:-1]
-        #print files
+        # print files
         random.shuffle(files)
         filecnt=10
         self.txt=[]
@@ -537,13 +537,15 @@ class TextSource(object):
             filecnt-=1
             if filecnt==0:
                 break            
-            fc=filename.decode('utf-8')
+            print filename
+            fc=filename
+            # fc=filename.decode('utf-8')
             fc=fn+fc
             print fc
             with open(fc,'r') as f:
                 for l in f.readlines():
                     line=l.strip()
-                    line=line.decode('utf-8')
+                    # line=line.decode('utf-8')
                     #print line
                     self.txt.append(line)
         random.shuffle(self.txt)          
