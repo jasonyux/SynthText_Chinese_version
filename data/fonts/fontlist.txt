@@ -1,3 +1,1 @@
-ubuntu/Ubuntu-Bold.ttf
-ubuntucondensed/UbuntuCondensed-Regular.ttf
-ubuntumono/UbuntuMono-Regular.ttf
+more_font/HYWaiWaiTiJ.ttf

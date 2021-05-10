@@ -77,6 +77,7 @@ def add_res_to_db(imgname,res,db):
     print 'type of res[i][\'txt\'] ',type(res[i]['txt'])
          
     #db['data'][dname].attrs['txt'] = res[i]['txt']
+    # res[i]['txt'] = [t.encode('utf-8') for t in res[i]['txt']]
     db['data'][dname].attrs.create('txt', res[i]['txt'], dtype=h5py.special_dtype(vlen=unicode))
     print 'type of db ',type(db['data'][dname].attrs['txt']) 
     print colorize(Color.GREEN,'successfully added')
