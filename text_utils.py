@@ -160,7 +160,8 @@ class RenderFont(object):
 
         # get the words:
         words = ' '.join(text.split())
-        words=words.decode('utf-8')
+        # words=words.decode('utf-8')
+        # print words
         # crop the surface to fit the text:
         bbs = np.array(bbs)
         surf_arr, bbs = crop_safe(pygame.surfarray.pixels_alpha(surf), rect_union, bbs, pad=5)

@@ -73,5 +73,5 @@ def main(db_fname):
 
 if __name__=='__main__':
     # main('results/SynthText_8000.h5')
-    main('results/SynthText.h5')
+    main('results/SynthText_cartoon_viz.h5')
 
