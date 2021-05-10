@@ -547,10 +547,13 @@ class TextSource(object):
                 for l in f.readlines():
                     line=l.strip()
                     # print line
+                    #line=line.decode('utf-8')
+                    #"""
                     try:
                         line=line.decode('utf-8')
                     except:
-                        print 'fucked', line
+                        print 'failed to decode:', line
+                    #"""
                     self.txt.append(line)
         random.shuffle(self.txt)          
         print len(self.txt)

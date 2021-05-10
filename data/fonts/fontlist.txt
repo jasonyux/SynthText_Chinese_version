@@ -1,1 +1,2 @@
 more_font/HYWaiWaiTiJ.ttf
+more_font/楷体_GB2312.ttf
