@@ -26,7 +26,7 @@ import time
 ## Define some configuration variables:
 NUM_IMG = -1 # no. of images to use for generation (-1 to use all available):
 INSTANCE_PER_IMAGE = 1 # no. of times to use the same image
-SECS_PER_IMG = 5 #max time per image in seconds
+SECS_PER_IMG = 5 #max time per image in seconds #TODO: change this back to 5
 
 # path to the data-file, containing image, depth and segmentation:
 DATA_PATH = 'data'
@@ -134,7 +134,7 @@ def main(viz=False):
 
   RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG)
   
-  for i in xrange(start_idx,end_idx):
+  for i in xrange(start_idx,start_idx+3): # TODO: change back to  xrange(start_idx,end_idx) for all images
     t1=time.time()
     imname = imnames[i]
     try:

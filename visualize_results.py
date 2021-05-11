@@ -38,7 +38,9 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0):
         for j in xrange(ni):
             bb = bbs[:,:,j]
             bb = np.c_[bb,bb[:,0]]
+            # given in the format of x=@bb[0,:], y=@bb[1,:]
             plt.plot(bb[0,:], bb[1,:], 'r', alpha=alpha/2)
+            print colorize(Color.BLUE, "box at: {} {}".format(bb[0,:], bb[1,:]))
     #"""
     """
     # plot the word-BB:

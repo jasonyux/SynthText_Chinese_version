@@ -201,9 +201,11 @@ class RenderFont(object):
         rect.centerx = surf.get_rect().centerx
         rect.centery = surf.get_rect().centery + rect.height
         rect.centery +=  curve[mid_idx]
+        print colorize(Color.BLUE, "midrec {} and {}".format(rect.centerx, rect.centery))
         ch_bounds = font.render_to(surf, rect, word_text[mid_idx], rotation=rots[mid_idx])
         ch_bounds.x = rect.x + ch_bounds.x
         ch_bounds.y = rect.y - ch_bounds.y
+        print colorize(Color.BLUE, "boundrec {} and {}".format(ch_bounds.x, ch_bounds.y))
         mid_ch_bb = np.array(ch_bounds)
 
         # render chars to the left and right:
@@ -225,6 +227,7 @@ class RenderFont(object):
             ch = word_text[i]
 
             newrect = font.get_rect(ch)
+            print colorize(Color.BLUE, "newrect {} for {}".format(newrect, ch.encode('utf-8')))
             newrect.y = last_rect.y
             if i > mid_idx:
                 newrect.topleft = (last_rect.topright[0]+2, newrect.topleft[1])
@@ -235,9 +238,11 @@ class RenderFont(object):
                 bbrect = font.render_to(surf, newrect, ch, rotation=rots[i])
             except ValueError:
                 bbrect = font.render_to(surf, newrect, ch)
+            print colorize(Color.BLUE, "post-render {}".format(bbrect))
             bbrect.x = newrect.x + bbrect.x
             bbrect.y = newrect.y - bbrect.y
             bbs.append(np.array(bbrect))
+            print colorize(Color.BLUE, "adding {}: {} {}".format(bbrect, bbrect.x, bbrect.y))
             last_rect = newrect
         
         # correct the bounding-box order:
@@ -288,8 +293,15 @@ class RenderFont(object):
             loc = minloc[np.random.choice(minloc.shape[0]),:]
             locs[i] = loc
 
-            # update the bounding-boxes:
+            # update the bounding-boxes: TODO: uncomment it
             bbs[i] = move_bb(bbs[i],loc[::-1])
+            print colorize(Color.BLUE, "shifted to {} result: {}".format(loc[::-1], bbs[i]))
+            """
+            for xs in bbs[i][0]:
+                xs.T[1:] -= 20
+            print colorize(Color.BLUE, "manual result: {}".format(bbs[i]))
+            """
+                        
 
             # blit the text onto the canvas
             w,h = text_arrs[i].shape
