@@ -107,6 +107,7 @@ class RenderFont(object):
         self.baselinestate = BaselineState()
 
         # text-source : gets english text:
+        # now this folder modified to contain only chinese texts
         self.text_source = TextSource(min_nchar=self.min_nchar,
                                       fn=osp.join(data_dir,'newsgroup/'))
 
@@ -137,7 +138,8 @@ class RenderFont(object):
         surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
 
         bbs = []
-        space = font.get_rect('O')
+        ##TODO: space = font.get_rect(u'a', encoding='utf-8')
+        space = font.get_rect('o')
         x, y = 0, 0
         for l in lines:
             x = 0 # carriage-return
@@ -430,8 +432,7 @@ class FontState(object):
     def __init__(self, data_dir='data'):
 
         char_freq_path = osp.join(data_dir, 'models/char_freq.cp')        
-        # font_model_path = osp.join(data_dir, 'models/font_px2pt.cp')
-        font_model_path = './font_px2pt.cp'
+        font_model_path = osp.join(data_dir, 'models/font_px2pt.cp')
 
         # get character-frequencies in the English language:
         with open(char_freq_path,'r') as f:
@@ -546,13 +547,15 @@ class TextSource(object):
             with open(fc,'r') as f:
                 for l in f.readlines():
                     line=l.strip()
-                    # print line
-                    #line=line.decode('utf-8')
+                    # add the file contents
+                    # TODO: consider this: line=line.decode('utf-8', 'ignore')
                     #"""
                     try:
                         line=line.decode('utf-8')
                     except:
-                        print 'failed to decode:', line
+                        print colorize(Color.RED, 'cannot decode', line)
+                        pass
+                        # print 'failed to decode:', line
                     #"""
                     self.txt.append(line)
         random.shuffle(self.txt)          

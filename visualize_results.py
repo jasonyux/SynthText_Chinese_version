@@ -30,7 +30,7 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0):
     plt.hold(True)
     H,W = text_im.shape[:2]
 
-    """
+    #"""
     # plot the character-BB:
     for i in xrange(len(charBB_list)):
         bbs = charBB_list[i]
@@ -39,7 +39,8 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0):
             bb = bbs[:,:,j]
             bb = np.c_[bb,bb[:,0]]
             plt.plot(bb[0,:], bb[1,:], 'r', alpha=alpha/2)
-
+    #"""
+    """
     # plot the word-BB:
     for i in xrange(wordBB.shape[-1]):
         bb = wordBB[:,:,i]

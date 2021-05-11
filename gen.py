@@ -76,9 +76,13 @@ def add_res_to_db(imgname,res,db):
     db['data'][dname].attrs['wordBB'] = res[i]['wordBB']
     print 'type of res[i][\'txt\'] ',type(res[i]['txt'])
          
-    #db['data'][dname].attrs['txt'] = res[i]['txt']
-    # res[i]['txt'] = [t.encode('utf-8') for t in res[i]['txt']]
-    db['data'][dname].attrs.create('txt', res[i]['txt'], dtype=h5py.special_dtype(vlen=unicode))
+    # TODO: seems not good. edited in the same manner as original repo
+    #"""
+    L = res[i]['txt']
+    L = [t.encode('utf-8', "ignore") for t in L]
+    db['data'][dname].attrs['txt'] = L
+    #"""
+    #db['data'][dname].attrs.create('txt', res[i]['txt'], dtype=h5py.special_dtype(vlen=unicode))
     print 'type of db ',type(db['data'][dname].attrs['txt']) 
     print colorize(Color.GREEN,'successfully added')
     print res[i]['txt']
