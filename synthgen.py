@@ -521,8 +521,6 @@ class RendererV3(object):
             #warn("bad charBB statistics")
             return #None
 
-        print colorize(Color.RED, "final bb={}".format(bb))
-
         # get the minimum height of the character-BB:
         min_h = self.get_min_h(bb,text)
 
@@ -676,7 +674,6 @@ class RendererV3(object):
                 if txt_render_res is not None:
                     placed = True
                     img,text,bb,collision_mask = txt_render_res
-                    print colorize(Color.YELLOW, 'after place_text{}'.format(bb))
                     # update the region collision mask:
                     place_masks[ireg] = collision_mask
                     # store the result:

@@ -30,7 +30,6 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0):
     plt.hold(True)
     H,W = text_im.shape[:2]
 
-    #"""
     # plot the character-BB:
     for i in xrange(len(charBB_list)):
         bbs = charBB_list[i]
@@ -40,9 +39,7 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0):
             bb = np.c_[bb,bb[:,0]]
             # given in the format of x=@bb[0,:], y=@bb[1,:]
             plt.plot(bb[0,:], bb[1,:], 'r', alpha=alpha/2)
-            print colorize(Color.BLUE, "box at: {} {}".format(bb[0,:], bb[1,:]))
-    #"""
-    """
+
     # plot the word-BB:
     for i in xrange(wordBB.shape[-1]):
         bb = wordBB[:,:,i]
@@ -52,12 +49,11 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0):
         vcol = ['r','g','b','k']
         for j in xrange(4):
             plt.scatter(bb[0,j],bb[1,j],color=vcol[j])    
-            """    
 
     plt.gca().set_xlim([0,W-1])
     plt.gca().set_ylim([H-1,0])
     plt.show(block=False)
-    plt.savefig("./test{}.png".format(num))
+    plt.savefig("out_images/test{}.png".format(num))
     num += 1
 
 def main(db_fname):
@@ -74,7 +70,7 @@ def main(db_fname):
         print "image name        : ", colorize(Color.RED, k, bold=True)
         print "  ** no. of chars : ", colorize(Color.YELLOW, charBB.shape[-1])
         print "  ** no. of words : ", colorize(Color.YELLOW, wordBB.shape[-1])
-        print "  ** text         : ", colorize(Color.GREEN, txt)
+        print "  ** text         : ", colorize(Color.GREEN, "**".join(txt))
 
         if 'q' in raw_input("next? ('q' to exit) : "):
             break
