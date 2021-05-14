@@ -62,7 +62,8 @@ def process_db_parallel(base_dir, th=0.11):
     Get segmentation masks from gPb contours.
     """
     db_path = osp.join(base_dir,'ucm.mat')
-    out_path = osp.join(base_dir,'seg_uint16.h5')
+    #out_path = osp.join(base_dir,'seg_uint16.h5')
+    out_path = osp.join(base_dir,'seg.h5')
     # output h5 file:
     dbo = h5py.File(out_path,'w')
     dbo_mask = dbo.create_group("mask")

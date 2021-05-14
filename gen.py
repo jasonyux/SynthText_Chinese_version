@@ -251,7 +251,7 @@ def main(viz=False):
   with open('imnames.cp', 'rb') as f:
     filtered_imnames = set(cp.load(f))
   """
-  for imname in imnames[:1]:
+  for imname in imnames:
     # ignore if not in filetered list:
     # if imname not in filtered_imnames: continue
     t1=time.time()
