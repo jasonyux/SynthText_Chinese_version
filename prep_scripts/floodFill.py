@@ -128,5 +128,5 @@ def process_db_parallel(base_dir, th=0.11):
     print ">>>> DONE"
 
 
-base_dir = '/home/' # directory containing the ucm.mat, i.e., output of run_ucm.m
+base_dir = '../depth_seg_images/result' # directory containing the ucm.mat, i.e., output of run_ucm.m
 process_db_parallel(base_dir)
