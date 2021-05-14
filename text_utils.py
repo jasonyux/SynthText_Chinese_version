@@ -109,7 +109,7 @@ class RenderFont(object):
         # text-source : gets english text:
         # now this folder modified to contain only chinese texts
         self.text_source = TextSource(min_nchar=self.min_nchar,
-                                      fn=osp.join(data_dir,'newsgroup/'))
+                                      fn=osp.join(data_dir,'game_texts/camp/'))
 
         # get font-state object:
         self.font_state = FontState(data_dir)

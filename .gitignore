@@ -1,6 +1,9 @@
 # IDE
 .vscode/
 
+# secret data file
+data/game_texts/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
