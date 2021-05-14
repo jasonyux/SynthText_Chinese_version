@@ -5,9 +5,14 @@
 % Author: Ankush Gupta
 
 % path to the directory containing images, which need to be segmented
-img_dir = 'dir/containing/images';
+% img_dir = 'dir/containing/images';
+img_dir = '../../depth_seg_images/2021-05-11';
 % path to the mcg/pre-trained directory.
-mcg_dir = '/path/to/mcg/pre-trained';
+% mcg_dir = '/path/to/mcg/pre-trained';
+% linux/ubuntu version
+mcg_dir = '/code/tmp/mcg/pre-trained';
+fprintf('assuming running on WSL/Linux platform \n')
+fprintf('if not, switch to WSL/linux and run "matlab" command \n')
 
 imsize = [240,NaN];
 % "install" the MCG toolbox:
@@ -25,7 +30,7 @@ ucms = cell(numel(imname),1);
 parfor i = 1:numel(imname)
 	fprintf('%d of %d\n',i,numel(imname));
 	try
-    im_name = fullfile(img_dir,imname{i});
+        im_name = fullfile(img_dir,imname{i});
 		im = imread(im_name);
 	catch
 		fprintf('err\n');
@@ -35,4 +40,4 @@ parfor i = 1:numel(imname)
 	names{i} = imname{i};
 	ucms{i} = im2ucm(im,'fast');
 end
-save('ucm.mat','ucms','names','-v7.3');
+save('../../depth_seg_images/result/ucm.mat','ucms','names','-v7.3');

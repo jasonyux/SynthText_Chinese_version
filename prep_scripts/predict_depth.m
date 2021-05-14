@@ -9,10 +9,11 @@ function predict_depth()
     % setup vlfeat
     
     %run( '../libs/vlfeat-0.9.18/toolbox/vl_setup');
-    run( '/home/yuz/lijiahui/fayao-dcnf-fcsp/libs/vlfeat-0.9.18/toolbox/vl_setup');
+    % directory under current folder somehow does not have the mex64 folder
+    run( 'D:\personal_tmp\dcnf-fcsp\libs\vlfeat-0.9.18\toolbox\vl_setup');
     % setup matconvnet
     % dir_matConvNet='../libs/matconvnet/matlab/';
-    dir_matConvNet='/home/yuz/lijiahui/fayao-dcnf-fcsp/libs/matconvnet_20141015/matlab/';
+    dir_matConvNet='D:\Dropbox\Internships\2021 Tencent\work\depth_seg_images\matconvnet-1.0-beta20\matlab\';
     addpath(genpath(dir_matConvNet));
     run([dir_matConvNet 'vl_setupnn.m']);
 
@@ -21,13 +22,13 @@ function predict_depth()
     opts.inpaint = true;
     opts.normalize_depth = false; % limit depth to [0,1]
     %opts.imdir = '/path/to/image/dir';
-    opts.imdir = '/home/yuz/lijiahui/syntheticdata/SynthText/img_dir';
+    opts.imdir = 'D:\Dropbox\Internships\2021 Tencent\work\depth_seg_images\2021-05-11';
     %opts.out_h5 = '/path/to/save/output/depth.h5';
-    opts.out_h5 = '/home/yuz/lijiahui/syntheticdata/depth.h5';
+    opts.out_h5 = 'D:\Dropbox\Internships\2021 Tencent\work\depth_seg_images\result\depth.h5';
     % these should point to the pre-trained models from:
     %  https://bitbucket.org/fayao/dcnf-fcsp/
-    opts.model_file.indoor =  '/home/yuz/lijiahui/fayao-dcnf-fcsp/model_trained/model_dcnf-fcsp_NYUD2.mat';
-    opts.model_file.outdoor =  '/home/yuz/lijiahui/fayao-dcnf-fcsp/model_trained/model_dcnf-fcsp_Make3D.mat';
+    opts.model_file.indoor =  'D:\personal_tmp\dcnf-fcsp\model_trained\model_dcnf-fcsp_NYUD2.mat';
+    opts.model_file.outdoor =  'D:\personal_tmp\dcnf-fcsp\model_trained\model_dcnf-fcsp_Make3D.mat';
 
     fprintf('\nloading trained model...\n\n');
     mdl = load(opts.model_file.indoor);
@@ -40,7 +41,7 @@ function predict_depth()
     %    opts.useGpu=false;
     %end
 
-    imnames = dir(fullfile(opts.imdir),'*');
+    imnames = dir(fullfile(opts.imdir));
     imnames = {imnames.name};
     N = numel(imnames);
     for i = 1:N
