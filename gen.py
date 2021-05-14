@@ -29,11 +29,12 @@ INSTANCE_PER_IMAGE = 1 # no. of times to use the same image
 SECS_PER_IMG = 5 #max time per image in seconds
 
 # path to the data-file, containing image, depth and segmentation:
-DATA_PATH = 'data'
+DATA_PATH = 'data' # TODO: this is also used by other resources
 DB_FNAME = osp.join(DATA_PATH,'dset.h5')
+# DB_FNAME = osp.join(DATA_PATH,'game_dset/data/dset.h5')
 # url of the data (google-drive public file):
 DATA_URL = 'http://www.robots.ox.ac.uk/~ankush/data.tar.gz'
-OUT_FILE = 'results/SynthText_cartoon_viz.h5'
+OUT_FILE = 'results/SynthText_game.h5'
 
 def get_data():
   """
@@ -112,7 +113,8 @@ def rgb2gray(image):
 
     gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
     return gray
-      
+
+""" original    
 def main(viz=False):
   # open databases:
   print colorize(Color.BLUE,'getting data..',bold=True)
@@ -124,6 +126,7 @@ def main(viz=False):
   out_db.create_group('/data')
   print colorize(Color.GREEN,'Storing the output in: '+OUT_FILE, bold=True)
 
+  
   # get the names of the image files in the dataset:
   imnames = sorted(db['image'].keys())
   N = len(imnames)
@@ -193,6 +196,8 @@ def main(viz=False):
       img = np.array(img.resize(sz,Image.ANTIALIAS))
       seg = np.array(Image.fromarray(seg).resize(sz,Image.NEAREST))
 
+      print depth.shape
+
       print colorize(Color.RED,'%d of %d'%(i,end_idx-1), bold=True)
       res = RV3.render_text(img,depth,seg,area,label,
                             ninstance=INSTANCE_PER_IMAGE,viz=viz)
@@ -217,9 +222,85 @@ def main(viz=False):
       traceback.print_exc()
       print colorize(Color.GREEN,'>>>> CONTINUING....', bold=True)
       continue
+  
   db.close()
   out_db.close()
+"""
 
+def main(viz=False):
+  # open databases:
+  print colorize(Color.BLUE,'getting data..',bold=True)
+  #add more data into the dset
+  more_depth_path='data/game_dset/depth.h5'
+  more_seg_path='data/game_dset/seg.h5'
+
+  im_dir='data/game_dset/images'
+  depth_db = h5py.File(more_depth_path,'r')
+  seg_db = h5py.File(more_seg_path,'r')
+
+  imnames = sorted(depth_db.keys())
+
+  # open the output h5 file:
+  out_db = h5py.File(OUT_FILE,'w')
+  out_db.create_group('/data')
+  print colorize(Color.GREEN,'Storing the output in: '+OUT_FILE, bold=True)
+
+
+  RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG)
+  """
+  with open('imnames.cp', 'rb') as f:
+    filtered_imnames = set(cp.load(f))
+  """
+  for imname in imnames[:1]:
+    # ignore if not in filetered list:
+    # if imname not in filtered_imnames: continue
+    t1=time.time()
+    try:
+      # get the colour image:
+      img = Image.open(osp.join(im_dir, imname)).convert('RGB')
+      
+      # get depth:
+      depth = depth_db[imname][:].T
+      # depth = depth[:,:,0]
+
+      # get segmentation info:
+      seg = seg_db['mask'][imname][:].astype('float32')
+      area = seg_db['mask'][imname].attrs['area']
+      label = seg_db['mask'][imname].attrs['label']
+
+      # re-size uniformly:
+      sz = depth.shape[:2][::-1]
+      img = np.array(img.resize(sz,Image.ANTIALIAS))
+      seg = np.array(Image.fromarray(seg).resize(sz,Image.NEAREST))
+
+      # compute text in image
+      res = RV3.render_text(img,depth,seg,area,label,
+                            ninstance=INSTANCE_PER_IMAGE,viz=viz)
+      t2=time.time()
+      
+      
+      for ct in range(5):
+      
+        if len(res) > 0:  
+            # non-empty : successful in placing text:
+            add_res_to_db(imname,res,out_db)
+            break
+        else:
+            res = RV3.render_text(img,depth,seg,area,label,
+                            ninstance=INSTANCE_PER_IMAGE,viz=viz)
+      # visualize the output:
+      print 'time consume in each pic',t2-t1
+      if viz:
+        if 'q' in raw_input(colorize(Color.RED,'continue? (enter to continue, q to exit): ',True)):
+          break
+    except:
+      traceback.print_exc()
+      print colorize(Color.GREEN,'>>>> CONTINUING....', bold=True)
+    continue
+  
+  depth_db.close()
+  seg_db.close()
+  out_db.close()
 
 if __name__=='__main__':
   import argparse

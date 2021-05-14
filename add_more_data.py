@@ -3,13 +3,21 @@ import h5py
 import os, sys, traceback
 import os.path as osp
 import wget, tarfile
+from synthgen import *
 import cv2
 
-
+def get_data(path):
+  if not osp.exists(path):
+      print colorize(Color.RED,'Data not found and have problems downloading.',bold=True)
+      sys.stdout.flush()
+      sys.exit(-1)
+  # open the h5 file and return:
+  return h5py.File(path,'r')
 
 
 def add_more_data_into_dset(DB_FNAME,more_img_file_path,more_depth_path,more_seg_path):
-  db=h5py.File(DB_FNAME,'wb+')
+  #db=h5py.File(DB_FNAME,'wb+')
+  db=h5py.File(DB_FNAME,'w')
   depth_db=get_data(more_depth_path)
   seg_db=get_data(more_seg_path)
   db.create_group('image')
@@ -35,6 +43,7 @@ def add_more_data_into_dset(DB_FNAME,more_img_file_path,more_depth_path,more_seg
   seg_db.close()
 
 
+"""
 # path to the data-file, containing image, depth and segmentation:
 DB_FNAME = '/home/yuz/lijiahui/syntheticdata/SynthText/more_data_from_off/dset_8000.h5'
 
@@ -42,5 +51,11 @@ DB_FNAME = '/home/yuz/lijiahui/syntheticdata/SynthText/more_data_from_off/dset_8
 more_depth_path='/home/yuz/lijiahui/syntheticdata/SynthText/more_data_from_off/depth.h5'
 more_seg_path='/home/yuz/lijiahui/syntheticdata/SynthText/more_data_from_off/seg.h5'
 more_img_file_path='/home/yuz/lijiahui/syntheticdata/SynthText/more_data_from_off/bg_img/'
+"""
+DB_FNAME = 'data/game_dset/data/dset.h5'
 
+#add more data into the dset
+more_depth_path='data/game_dset/depth.h5'
+more_seg_path='data/game_dset/seg.h5'
+more_img_file_path='data/game_dset/images/'
 add_more_data_into_dset(DB_FNAME,more_img_file_path,more_depth_path,more_seg_path)
