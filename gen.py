@@ -231,10 +231,10 @@ def main(viz=False):
   # open databases:
   print colorize(Color.BLUE,'getting data..',bold=True)
   #add more data into the dset
-  more_depth_path='data/game_dset/depth.h5'
-  more_seg_path='data/game_dset/seg.h5'
+  more_depth_path='data/game_dset/prev_work/depth.h5'
+  more_seg_path='data/game_dset/prev_work/seg.h5'
 
-  im_dir='data/game_dset/images'
+  im_dir='data/game_dset/prev_work/images'
   depth_db = h5py.File(more_depth_path,'r')
   seg_db = h5py.File(more_seg_path,'r')
 

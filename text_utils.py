@@ -72,7 +72,9 @@ class BaselineState(object):
         if np.random.rand() < 0.5:
             sgn = -1
 
+        # TODO: attempt to do no curve
         a = self.a[1]*np.random.randn() + sgn*self.a[0]
+        # a = self.a[1]*np.random.randn()
         return {
             'curve': self.curve(a),
             'diff': self.differential(a),
@@ -181,6 +183,9 @@ class RenderFont(object):
         if not isword or wl > 10 or np.random.rand() > self.p_curved:
             return self.render_multiline(font, word_text)
 
+        #TODO: attempt to do no no curve
+        # return self.render_multiline(font, word_text)
+
         # create the surface:
         lspace = font.get_sized_height() + 1
         lbound = font.get_rect(word_text)
@@ -190,9 +195,22 @@ class RenderFont(object):
         # baseline state
         mid_idx = wl//2
         BS = self.baselinestate.get_sample()
-        curve = [BS['curve'](i-mid_idx) for i in xrange(wl)]
+        
+        # this is the original one, rotation and curve
+        curve = [BS['curve'](i-mid_idx)*10 for i in xrange(wl)]
         curve[mid_idx] = -np.sum(curve) / (wl-1)
+
         rots  = [-int(math.degrees(math.atan(BS['diff'](i-mid_idx)/(font.size/2)))) for i in xrange(wl)]
+
+        # TODO: attempt to do rotation without curving
+        if True:
+            grad = 0.1 * font.size/2
+            curve = [abs(i)*grad for i in xrange(wl)]
+            curve[mid_idx] = abs(np.sum(curve) / (wl-1))
+            print colorize(Color.RED, "curve: {}".format(curve))
+            print colorize(Color.RED, "simple curve: {}".format([i for i in xrange(wl) ]))
+            rots  = [-int(math.degrees(math.atan(grad))) for i in xrange(wl)]
+            print colorize(Color.RED, rots)
 
         bbs = []
         # place middle char
@@ -224,12 +242,24 @@ class RenderFont(object):
             ch = word_text[i]
 
             newrect = font.get_rect(ch)
-            newrect.y = last_rect.y
+            newrect.y = last_rect.y + grad
+
+            # TODO: attempt to do rotation without curving
+            if True:
+                grad = font.size/2
+                if i < mid_idx: #left-chars
+                    newrect.y = last_rect.y - grad
+                elif i==mid_idx+1: #right-chars begin
+                    newrect.y = last_rect.y + grad
+            print colorize(Color.RED, "y at {}".format(newrect.y))
+
             if i > mid_idx:
                 newrect.topleft = (last_rect.topright[0]+2, newrect.topleft[1])
             else:
                 newrect.topright = (last_rect.topleft[0]-2, newrect.topleft[1])
+
             newrect.centery = max(newrect.height, min(fsize[1] - newrect.height, newrect.centery + curve[i]))
+            print colorize(Color.RED, "newrect at {}".format(newrect))
             try:
                 bbrect = font.render_to(surf, newrect, ch, rotation=rots[i])
             except ValueError:

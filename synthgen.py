@@ -521,6 +521,14 @@ class RendererV3(object):
             #warn("bad charBB statistics")
             return #None
 
+        # attempt create text without transforming them
+        # if this is True, then text will be parallel to the image 
+        # (i.e. normal of the text surface the same as the normal of the image)
+        render_parallel = True
+        if render_parallel:
+            bb = bb_orig
+            text_mask = text_mask_orig
+
         # get the minimum height of the character-BB:
         min_h = self.get_min_h(bb,text)
 
