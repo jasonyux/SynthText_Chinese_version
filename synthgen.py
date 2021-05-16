@@ -21,6 +21,7 @@ import text_utils as tu
 from colorize3_poisson import Colorize
 from common import *
 import traceback, itertools
+import logging
 
 
 class TextRegions(object):
@@ -536,7 +537,7 @@ class RendererV3(object):
         text_mask = self.feather(text_mask, min_h)
 
         im_final = self.colorizer.color(rgb,[text_mask],np.array([min_h]))
-        print colorize(Color.GREEN, 'text in synthgen.py/place_text to return '+text)
+        logging.debug(colorize(Color.GREEN, 'text in synthgen.py/place_text to return '+text))
         return im_final, text, bb, collision_mask
 
 

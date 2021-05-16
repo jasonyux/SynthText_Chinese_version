@@ -41,7 +41,7 @@ def get_mask(ucm,viz=False):
         sx,sy = np.where(mask==0)
         seed = get_seed(sx,sy,ucm)
         i += 1
-    print "  > terminated in %d steps"%i
+    print("  > terminated in %d steps"%i)
 
     if viz:
         plt.imshow(mask)
@@ -79,10 +79,11 @@ def process_db_parallel(base_dir, th=0.11):
             return self
 
         def get_imname(self,i):
-            return "".join(map(chr, self.ucm_h5[self.ucm_h5['names'][0,self.i]][:]))
+            # fixed for unicode
+            return "".join(map(unichr, self.ucm_h5[self.ucm_h5['names'][0,self.i]][:]))
 
         def __stop__(self):
-            print "DONE"
+            print("DONE")
             self.ucm_h5.close()
             raise StopIteration
 
@@ -102,14 +103,14 @@ def process_db_parallel(base_dir, th=0.11):
 
         def next(self):
             imname = self.get_valid_name()
-            print "%d of %d"%(self.i+1,self.N)
+            print("%d of %d"%(self.i+1,self.N))
             ucm = self.ucm_h5[self.ucm_h5['ucms'][0,self.i]][:]
             ucm = ucm.copy()
             self.i += 1
             return ((ucm>self.th).astype('uint8'),imname)
 
     ucm_iter = ucm_iterable(db_path,th)
-    print "cpu count: ", mp.cpu_count()
+    print("cpu count: ", mp.cpu_count())
     parpool = mp.Pool(4)
     ucm_result = parpool.imap_unordered(get_mask_parallel, ucm_iter, chunksize=1)
 
@@ -117,16 +118,16 @@ def process_db_parallel(base_dir, th=0.11):
         if res is None:
             continue
         ((mask,area,label),imname) = res
-        print "got back : ", imname
+        print("got back : ", imname)
         mask = mask.astype('uint16')
         mask_dset = dbo_mask.create_dataset(imname, data=mask)
         mask_dset.attrs['area'] = area
         mask_dset.attrs['label'] = label
 
     # close the h5 files:
-    print "closing DB"
+    print("closing DB")
     dbo.close()
-    print ">>>> DONE"
+    print(">>>> DONE")
 
 
 base_dir = '../data/game_dset' # directory containing the ucm.mat, i.e., output of run_ucm.m

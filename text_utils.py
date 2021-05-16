@@ -10,7 +10,7 @@ import scipy.signal as ssig
 import scipy.stats as sstat
 import pygame, pygame.locals
 from pygame import freetype
-#import Image
+import logging
 from PIL import Image
 import math
 from common import *
@@ -64,6 +64,10 @@ class BaselineState(object):
     differential = lambda this, a: lambda x: 2*a*x
     a = [0.50, 0.05]
 
+    # TODO: attempt to do no curve1
+    curve = lambda this, a: lambda x: a*x
+    differential = lambda this, a: lambda x: a
+
     def get_sample(self):
         """
         Returns the functions for the curve and differential for a and b
@@ -71,10 +75,9 @@ class BaselineState(object):
         sgn = 1.0
         if np.random.rand() < 0.5:
             sgn = -1
-
-        # TODO: attempt to do no curve
-        a = self.a[1]*np.random.randn() + sgn*self.a[0]
-        # a = self.a[1]*np.random.randn()
+        a = 20
+        if False:
+            a = self.a[1]*np.random.randn() + sgn*self.a[0]
         return {
             'curve': self.curve(a),
             'diff': self.differential(a),
@@ -142,6 +145,7 @@ class RenderFont(object):
         bbs = []
         space = font.get_rect('o')
         x, y = 0, 0
+        #TODO: enable rotation for multiline texts as well
         for l in lines:
             x = 0 # carriage-return
             y += line_spacing # line-feed
@@ -183,7 +187,7 @@ class RenderFont(object):
         if not isword or wl > 10 or np.random.rand() > self.p_curved:
             return self.render_multiline(font, word_text)
 
-        #TODO: attempt to do no no curve
+        #TODO: attempt to do NO curve, NO rotation
         # return self.render_multiline(font, word_text)
 
         # create the surface:
@@ -192,25 +196,38 @@ class RenderFont(object):
         fsize = (round(2.0*lbound.width), round(3*lspace))
         surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
 
+        logging.debug(colorize(Color.RED, "surface with {}, offset={}".format(surf.get_rect(), surf.get_abs_offset())))
+
         # baseline state
         mid_idx = wl//2
         BS = self.baselinestate.get_sample()
         
         # this is the original one, rotation and curve
-        curve = [BS['curve'](i-mid_idx)*10 for i in xrange(wl)]
-        curve[mid_idx] = -np.sum(curve) / (wl-1)
-
-        rots  = [-int(math.degrees(math.atan(BS['diff'](i-mid_idx)/(font.size/2)))) for i in xrange(wl)]
-
-        # TODO: attempt to do rotation without curving
-        if True:
-            grad = 0.1 * font.size/2
+        curve = [BS['curve'](i-mid_idx) for i in xrange(wl)]
+        #curve[mid_idx] = -np.sum(curve) / (wl-1)
+        #rots  = [-int(math.degrees(math.atan(BS['diff'](i-mid_idx)/(font.size/2)))) for i in xrange(wl)]
+        
+        # TODO: attempt to do rotation without curving (i.e. oblique)
+        rots  = [-int(math.degrees(math.atan(BS['diff'](i-mid_idx)/(font.size)))) for i in xrange(wl)]
+        """
+        ang = 1
+        grad = font.size//ang # this thing is randomly generated
+        surf_rect = surf.get_rect()
+        logging.debug("sizes: {}, hieght={}".format(font.get_rect('o'), font.get_sized_height()))
+        #logging.debug("{} {} {}".format(type(font), font.size, font.get_height()))
+        max_grad = (surf_rect.h - font.get_sized_height())/(surf_rect.w - font.size)
+        grad = max_grad * font.size
+        logging.debug("{} top={} left={}, x={}, y={}, topleft={}, bottomright={}".format(
+            type(surf_rect), surf_rect.top, surf_rect.left, surf_rect.x, surf_rect.y, surf_rect.topleft, surf_rect.bottomright))
+        """
+        logging.debug(colorize(Color.RED, "curve: {}".format(curve)))
+        if False:
             curve = [abs(i)*grad for i in xrange(wl)]
-            curve[mid_idx] = abs(np.sum(curve) / (wl-1))
-            print colorize(Color.RED, "curve: {}".format(curve))
-            print colorize(Color.RED, "simple curve: {}".format([i for i in xrange(wl) ]))
-            rots  = [-int(math.degrees(math.atan(grad))) for i in xrange(wl)]
-            print colorize(Color.RED, rots)
+            curve[mid_idx] = np.sum(curve) / (wl-1)
+            rots  = [-int(math.degrees(math.atan(max_grad))) for i in xrange(wl)]
+            
+            logging.debug(colorize(Color.RED, "simple curve: {}".format([i for i in xrange(wl) ])))
+            logging.debug(colorize(Color.RED, rots))
 
         bbs = []
         # place middle char
@@ -222,6 +239,9 @@ class RenderFont(object):
         ch_bounds.x = rect.x + ch_bounds.x
         ch_bounds.y = rect.y - ch_bounds.y
         mid_ch_bb = np.array(ch_bounds)
+
+        logging.debug(colorize(Color.RED, "[{}]th=mid char {} with y at {}".format(mid_idx, word_text[mid_idx].encode('utf-8'), rect.y)))
+        logging.debug(colorize(Color.RED, "newrect at {}".format(rect)))
 
         # render chars to the left and right:
         last_rect = rect
@@ -242,24 +262,26 @@ class RenderFont(object):
             ch = word_text[i]
 
             newrect = font.get_rect(ch)
-            newrect.y = last_rect.y + grad
+            newrect.y = last_rect.y
 
             # TODO: attempt to do rotation without curving
+            if False:
+                if i > mid_idx:
+                    newrect.topleft = (last_rect.topright[0]+2, newrect.topleft[1] + grad)
+                else:
+                    newrect.topright = (last_rect.topleft[0]-2, newrect.topleft[1] - grad)
+            
             if True:
-                grad = font.size/2
-                if i < mid_idx: #left-chars
-                    newrect.y = last_rect.y - grad
-                elif i==mid_idx+1: #right-chars begin
-                    newrect.y = last_rect.y + grad
-            print colorize(Color.RED, "y at {}".format(newrect.y))
-
-            if i > mid_idx:
-                newrect.topleft = (last_rect.topright[0]+2, newrect.topleft[1])
-            else:
-                newrect.topright = (last_rect.topleft[0]-2, newrect.topleft[1])
-
-            newrect.centery = max(newrect.height, min(fsize[1] - newrect.height, newrect.centery + curve[i]))
-            print colorize(Color.RED, "newrect at {}".format(newrect))
+                if i > mid_idx:
+                    newrect.topleft = (last_rect.topright[0]+2, newrect.topleft[1])
+                else:
+                    newrect.topright = (last_rect.topleft[0]-2, newrect.topleft[1])
+                #newrect.centery = max(newrect.height, min(fsize[1] - newrect.height, newrect.centery + curve[i]))
+            
+            offset = abs(mid_idx - i)
+            newrect.centery += curve[i]/offset
+            logging.debug(colorize(Color.RED, "[{}]th char {} with y at {}".format(i, ch.encode('utf-8'), newrect.y)))
+            logging.debug(colorize(Color.RED, "newrect at {}".format(newrect)))
             try:
                 bbrect = font.render_to(surf, newrect, ch, rotation=rots[i])
             except ValueError:
@@ -404,14 +426,15 @@ class RenderFont(object):
             text = self.text_source.sample(nline,nchar,text_type)
             #text = self.text_source.sample(nline,nchar,'PARA')
             #text = self.text_source.sample(nline,nchar,'WORD')
-            print 'before the if judge',text
+            
+            #print 'before the if judge',text.encode('utf-8') #TODO: it could be a paragraph as well
             if len(text)==0:
-                print colorize(Color.GREEN, ' didn\'t pass because of len(text)==0')
+                logging.debug(colorize(Color.GREEN, ' didn\'t pass because of len(text)==0'))
                 continue
             if np.any([len(line)==0 for line in text]):
-                print colorize(Color.GREEN, ' didn\'t pass because of np.any')
+                logging.debug(colorize(Color.GREEN, ' didn\'t pass because of np.any'))
                 continue
-            print colorize(Color.GREEN, 'pass the text filter')
+            logging.info(colorize(Color.GREEN, 'pass the text filter'))
             #print colorize(Color.GREEN, text)
 
             # render the text:
@@ -421,9 +444,10 @@ class RenderFont(object):
             # make sure that the text-array is not bigger than mask array:
             if np.any(np.r_[txt_arr.shape[:2]] > np.r_[mask.shape[:2]]):
                 #warn("text-array is bigger than mask")
-                print colorize(Color.GREEN, 'fail in mask array size')
+                logging.info(colorize(Color.GREEN, 'fail in mask array size'))
                 continue
-            print colorize(Color.GREEN, 'pass in mask array size')
+            logging.info(colorize(Color.GREEN, 'pass in mask array size'))
+            
             # position the text within the mask:
             text_mask,loc,bb, _ = self.place_text([txt_arr], mask, [bb])
             if len(loc) > 0:#successful in placing the text collision-free:
@@ -684,8 +708,15 @@ class TextSource(object):
             return lines
 
     def sample(self, nline_max,nchar_max,kind='WORD'):
-        print 'sample_output',self.fdict[kind](nline_max,nchar_max)
+        #print 'sample_output',self.fdict[kind](nline_max,nchar_max)
         return self.fdict[kind](nline_max,nchar_max)
+        """
+        print 'is type:', type(self.fdict[kind](nline_max,nchar_max))
+        encoded = [t.encode('utf-8') for t in self.fdict[kind](nline_max,nchar_max)]
+        # print('sample output {}'.format(encoded))
+        return encoded
+        """
+        
         
     def sample_word(self,nline_max,nchar_max,niter=100):
         rand_line = self.txt[np.random.choice(len(self.txt))]                

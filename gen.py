@@ -22,6 +22,7 @@ from common import *
 import wget, tarfile
 import cv2 as cv
 import time 
+import logging
 
 ## Define some configuration variables:
 NUM_IMG = -1 # no. of images to use for generation (-1 to use all available):
@@ -29,12 +30,16 @@ INSTANCE_PER_IMAGE = 1 # no. of times to use the same image
 SECS_PER_IMG = 5 #max time per image in seconds
 
 # path to the data-file, containing image, depth and segmentation:
-DATA_PATH = 'data' # TODO: this is also used by other resources
+DATA_PATH = 'data' # this is also used by other resources. This should NOT be changed
 DB_FNAME = osp.join(DATA_PATH,'dset.h5')
 # DB_FNAME = osp.join(DATA_PATH,'game_dset/data/dset.h5')
 # url of the data (google-drive public file):
 DATA_URL = 'http://www.robots.ox.ac.uk/~ankush/data.tar.gz'
-OUT_FILE = 'results/SynthText_game.h5'
+
+OUT_FILE = 'results/SynthText_game.h5' #TODO: changed for testing
+DEPTH_PATH='data/game_dset/prev_work/depth.h5'
+SEG_PATH='data/game_dset/prev_work/seg.h5'
+IM_DIR='data/game_dset/prev_work/images'
 
 def get_data():
   """
@@ -84,14 +89,14 @@ def add_res_to_db(imgname,res,db):
     db['data'][dname].attrs['txt'] = L
     #"""
     #db['data'][dname].attrs.create('txt', res[i]['txt'], dtype=h5py.special_dtype(vlen=unicode))
-    print 'type of db ',type(db['data'][dname].attrs['txt']) 
-    print colorize(Color.GREEN,'successfully added')
-    print res[i]['txt']
-    print res[i]['img'].shape
-    print 'charBB',res[i]['charBB'].shape
-    print 'charBB',res[i]['charBB']
-    print 'wordBB',res[i]['wordBB'].shape
-    print 'wordBB',res[i]['wordBB']
+    logging.debug('type of db: {}'.format(type(db['data'][dname].attrs['txt'])))
+    logging.debug(colorize(Color.GREEN,'successfully added'))
+    logging.debug(res[i]['txt'])
+    logging.debug(res[i]['img'].shape)
+    logging.debug('charBB {}'.format(res[i]['charBB'].shape))
+    logging.debug('charBB {}'.format(res[i]['charBB']))
+    logging.debug('wordBB {}'.format(res[i]['wordBB'].shape))
+    logging.debug('wordBB {}'.format(res[i]['wordBB']))
     '''
     img = Image.fromarray(res[i]['img'])
     hsv_img=np.array(rgb2hsv(img))
@@ -229,21 +234,23 @@ def main(viz=False):
 
 def main(viz=False):
   # open databases:
-  print colorize(Color.BLUE,'getting data..',bold=True)
+  logging.info(colorize(Color.BLUE,'getting data..',bold=True))
   #add more data into the dset
-  more_depth_path='data/game_dset/prev_work/depth.h5'
-  more_seg_path='data/game_dset/prev_work/seg.h5'
+  """
+  more_depth_path='data/game_dset/depth.h5'
+  more_seg_path='data/game_dset/seg.h5'
 
-  im_dir='data/game_dset/prev_work/images'
-  depth_db = h5py.File(more_depth_path,'r')
-  seg_db = h5py.File(more_seg_path,'r')
+  im_dir='data/game_dset/images/results'
+  """
+  depth_db = h5py.File(DEPTH_PATH,'r')
+  seg_db = h5py.File(SEG_PATH,'r')
 
   imnames = sorted(depth_db.keys())
 
   # open the output h5 file:
   out_db = h5py.File(OUT_FILE,'w')
   out_db.create_group('/data')
-  print colorize(Color.GREEN,'Storing the output in: '+OUT_FILE, bold=True)
+  logging.info(colorize(Color.GREEN,'Storing the output in: '+OUT_FILE, bold=True))
 
 
   RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG)
@@ -251,13 +258,13 @@ def main(viz=False):
   with open('imnames.cp', 'rb') as f:
     filtered_imnames = set(cp.load(f))
   """
-  for imname in imnames:
+  for imname in imnames[:2]:
     # ignore if not in filetered list:
     # if imname not in filtered_imnames: continue
     t1=time.time()
     try:
       # get the colour image:
-      img = Image.open(osp.join(im_dir, imname)).convert('RGB')
+      img = Image.open(osp.join(IM_DIR, imname)).convert('RGB')
       
       # get depth:
       depth = depth_db[imname][:].T
@@ -289,13 +296,13 @@ def main(viz=False):
             res = RV3.render_text(img,depth,seg,area,label,
                             ninstance=INSTANCE_PER_IMAGE,viz=viz)
       # visualize the output:
-      print 'time consume in each pic',t2-t1
+      logging.info('time consume in each pic {}'.format(t2-t1))
       if viz:
         if 'q' in raw_input(colorize(Color.RED,'continue? (enter to continue, q to exit): ',True)):
           break
     except:
       traceback.print_exc()
-      print colorize(Color.GREEN,'>>>> CONTINUING....', bold=True)
+      logging.info(colorize(Color.GREEN,'>>>> CONTINUING....', bold=True))
     continue
   
   depth_db.close()
@@ -307,4 +314,6 @@ if __name__=='__main__':
   parser = argparse.ArgumentParser(description='Genereate Synthetic Scene-Text Images')
   parser.add_argument('--viz',action='store_true',dest='viz',default=False,help='flag for turning on visualizations')
   args = parser.parse_args()
+
+  logging.basicConfig(level=logging.DEBUG)
   main(args.viz)
