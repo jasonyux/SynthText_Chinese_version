@@ -197,7 +197,7 @@ class RenderFont(object):
         surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
 
         # TODO: 
-        angle = 45 # rotates the text clockwise
+        angle = 10 # rotates the text clockwise
         #surf = pygame.transform.rotate(surf, angle)
 
         logging.debug(colorize(Color.RED, "surface with {}, offset={}".format(surf.get_rect(), surf.get_abs_offset())))
