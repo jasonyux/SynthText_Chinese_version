@@ -197,7 +197,7 @@ class RenderFont(object):
         surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
 
         # TODO: 
-        angle = 10 # rotates the text clockwise
+        angle = 75 # rotates the text clockwise
         #surf = pygame.transform.rotate(surf, angle)
 
         logging.debug(colorize(Color.RED, "surface with {}, offset={}".format(surf.get_rect(), surf.get_abs_offset())))
@@ -282,21 +282,22 @@ class RenderFont(object):
             # TODO: attempt to do rotation without curving
             # this does not work if the text is shorter or equal to 2 words
             if True:
-                # height_fix = last_rect.centery - (((last_rect.width + newrect.width)/2) * -0.5 )
-                offset = abs(mid_idx - i)
-                font_height = last_rect.height
-                adjust = (last_rect.height - (newrect.height))/abs(math.tan(angle))# adjust if this rectangle/char is NOT the same size as previous
-                
-                y_dist = math.tan(math.radians(angle)) * ((last_rect.width + newrect.width)/2.0)
-                logging.debug("grad={}, y_dist={}".format(math.tan(math.radians(angle)), y_dist))
-                if i > mid_idx:
-                    font_height += adjust
-                    #newrect.centery += font_height
-                    newrect.centery += y_dist
-                else:
-                    font_height -= adjust
-                    #newrect.centery -= font_height
-                    newrect.centery -= y_dist
+                if angle <= 45:
+                    y_dist = math.tan(math.radians(angle)) * ((last_rect.width + newrect.width)/2.0)
+                    logging.debug("grad={}, y_dist={}".format(math.tan(math.radians(angle)), y_dist))
+                    if i > mid_idx:
+                        newrect.centery += y_dist
+                    else:
+                        newrect.centery -= y_dist
+                else: # now, instead of shifting y, I shift x
+                    y_dist = ((last_rect.height + newrect.height)/2.0) + 2 # no y-overlap
+                    x_dist = ((last_rect.width + newrect.width)/2.0) - (y_dist / math.tan(math.radians(angle)))
+                    if i > mid_idx:
+                        newrect.centery += y_dist
+                        newrect.centerx -= x_dist
+                    else:
+                        newrect.centery -= y_dist
+                        newrect.centerx += x_dist
                 
             logging.debug(colorize(Color.RED, "[{}]th char {} with y at {}".format(i, ch.encode('utf-8'), newrect.y)))
             logging.debug(colorize(Color.RED, "moved newrect at {}".format(newrect)))
