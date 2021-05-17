@@ -197,8 +197,8 @@ class RenderFont(object):
         surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
 
         # TODO: 
-        angle = 45
-        surf = pygame.transform.rotate(surf, angle)
+        angle = 45 # rotates the text clockwise
+        #surf = pygame.transform.rotate(surf, angle)
 
         logging.debug(colorize(Color.RED, "surface with {}, offset={}".format(surf.get_rect(), surf.get_abs_offset())))
 
@@ -285,17 +285,21 @@ class RenderFont(object):
                 # height_fix = last_rect.centery - (((last_rect.width + newrect.width)/2) * -0.5 )
                 offset = abs(mid_idx - i)
                 font_height = last_rect.height
-                adjust = (last_rect.height - (newrect.height))/2# adjust if this rectangle/char is NOT the same size as previous
+                adjust = (last_rect.height - (newrect.height))/abs(math.tan(angle))# adjust if this rectangle/char is NOT the same size as previous
                 
+                y_dist = math.tan(math.radians(angle)) * ((last_rect.width + newrect.width)/2.0)
+                logging.debug("grad={}, y_dist={}".format(math.tan(math.radians(angle)), y_dist))
                 if i > mid_idx:
                     font_height += adjust
-                    newrect.centery += font_height
+                    #newrect.centery += font_height
+                    newrect.centery += y_dist
                 else:
                     font_height -= adjust
-                    newrect.centery -= font_height
+                    #newrect.centery -= font_height
+                    newrect.centery -= y_dist
                 
             logging.debug(colorize(Color.RED, "[{}]th char {} with y at {}".format(i, ch.encode('utf-8'), newrect.y)))
-            logging.debug(colorize(Color.RED, "newrect at {}".format(newrect)))
+            logging.debug(colorize(Color.RED, "moved newrect at {}".format(newrect)))
             try:
                 bbrect = font.render_to(surf, newrect, ch, rotation=rots[i])
             except ValueError:
