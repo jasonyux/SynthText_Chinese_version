@@ -196,6 +196,10 @@ class RenderFont(object):
         fsize = (round(2.0*lbound.width), round(3*lspace))
         surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
 
+        # TODO: 
+        angle = 45
+        surf = pygame.transform.rotate(surf, angle)
+
         logging.debug(colorize(Color.RED, "surface with {}, offset={}".format(surf.get_rect(), surf.get_abs_offset())))
 
         # baseline state
@@ -209,6 +213,8 @@ class RenderFont(object):
         
         # TODO: attempt to do rotation without curving (i.e. oblique)
         rots  = [-int(math.degrees(math.atan(BS['diff'](i-mid_idx)/(font.size)))) for i in xrange(wl)]
+
+        rots  = [-angle for i in xrange(wl)]
         """
         ang = 1
         grad = font.size//ang # this thing is randomly generated
@@ -264,22 +270,30 @@ class RenderFont(object):
             newrect = font.get_rect(ch)
             newrect.y = last_rect.y
 
+            logging.debug("{} top={} left={}, x={}, y={}, topleft={}, bottomright={}".format(
+            type(newrect), newrect.top, newrect.left, newrect.x, newrect.y, newrect.topleft, newrect.bottomright))
+
+            if i > mid_idx:
+                newrect.topleft = (last_rect.topright[0]+2, newrect.topleft[1])
+            else:
+                newrect.topright = (last_rect.topleft[0]-2, newrect.topleft[1])
+            #newrect.centery = max(newrect.height, min(fsize[1] - newrect.height, newrect.centery + curve[i]))
+
             # TODO: attempt to do rotation without curving
-            if False:
-                if i > mid_idx:
-                    newrect.topleft = (last_rect.topright[0]+2, newrect.topleft[1] + grad)
-                else:
-                    newrect.topright = (last_rect.topleft[0]-2, newrect.topleft[1] - grad)
-            
+            # this does not work if the text is shorter or equal to 2 words
             if True:
+                # height_fix = last_rect.centery - (((last_rect.width + newrect.width)/2) * -0.5 )
+                offset = abs(mid_idx - i)
+                font_height = last_rect.height
+                adjust = (last_rect.height - (newrect.height))/2# adjust if this rectangle/char is NOT the same size as previous
+                
                 if i > mid_idx:
-                    newrect.topleft = (last_rect.topright[0]+2, newrect.topleft[1])
+                    font_height += adjust
+                    newrect.centery += font_height
                 else:
-                    newrect.topright = (last_rect.topleft[0]-2, newrect.topleft[1])
-                #newrect.centery = max(newrect.height, min(fsize[1] - newrect.height, newrect.centery + curve[i]))
-            
-            offset = abs(mid_idx - i)
-            newrect.centery += curve[i]/offset
+                    font_height -= adjust
+                    newrect.centery -= font_height
+                
             logging.debug(colorize(Color.RED, "[{}]th char {} with y at {}".format(i, ch.encode('utf-8'), newrect.y)))
             logging.debug(colorize(Color.RED, "newrect at {}".format(newrect)))
             try:
