@@ -138,7 +138,7 @@ def main(viz=False):
 
   RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG)
 
-  for imname in imnames[:10]:
+  for imname in imnames[40:41]:
     # ignore if not in filetered list:
     # if imname not in filtered_imnames: continue
     t1=time.time()

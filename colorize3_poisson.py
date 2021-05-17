@@ -10,6 +10,7 @@ import cPickle as cp
 #import Image
 from PIL import Image
 from poisson_reconstruct import blit_images
+import logging
 
 
 def sample_weighted(p_dict):
@@ -302,6 +303,13 @@ class Colorize(object):
         """
         bg_col,fg_col,i = 0,0,0
         fg_col,bg_col = self.font_color.sample_from_data(bg_arr)
+        
+        choice = np.random.choice(2)
+        logging.debug("bg_color={}, fg_color={}".format(bg_col, fg_col))
+        if choice == 0:
+            fg_col = self.font_color.complement(fg_col)
+            bg_col = self.font_color.complement(bg_col)
+            logging.debug("bg_color={}, fg_color={}".format(bg_col, fg_col))
         return Layer(alpha=text_arr, color=fg_col), fg_col, bg_col
 
 
