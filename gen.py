@@ -97,7 +97,7 @@ def add_res_to_db(imgname,res,db):
     logging.debug('charBB {}'.format(res[i]['charBB']))
     logging.debug('wordBB {}'.format(res[i]['wordBB'].shape))
     logging.debug('wordBB {}'.format(res[i]['wordBB']))
-    
+
     
 def rgb2hsv(image):
     return image.convert('HSV')
@@ -129,7 +129,7 @@ def main(viz=False):
 
   RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG)
 
-  for imname in imnames[:2]:
+  for imname in imnames[:]:
     # ignore if not in filetered list:
     # if imname not in filtered_imnames: continue
     t1=time.time()

@@ -107,8 +107,13 @@ class RenderFont(object):
         self.p_flat = 0.10
 
         # curved baseline:
-        self.p_curved = 1.0
+        #self.p_curved = 1.0
+        self.p_curved = 0.3
         self.baselinestate = BaselineState()
+
+        # rotation only / vertical
+        self.p_rotated = 0.4
+        self.p_vertical = 0.3
 
         # text-source : gets english text:
         # now this folder modified to contain only chinese texts
@@ -175,6 +180,43 @@ class RenderFont(object):
         #self.visualize_bb(surf_arr,bbs)
         return surf_arr, words, bbs
 
+
+    def render_vertical(self, font, word_text):
+        wl = len(word_text)
+        isword = len(word_text.split())==1
+        lspace = font.get_sized_height() + 1
+        lbound = font.get_rect(word_text)
+        fsize = (round(2.0*lbound.width), round(3*lspace))
+        surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
+        
+        bbs = []
+        space = font.get_rect('o')
+        x, y = 0, 0
+
+        for ch in word_text: # render each character
+            if ch.isspace(): # just shift
+                y += space.width
+            else:
+                # render the character
+                ch_bounds = font.render_to(surf, (x,y), ch)
+                #ch_bounds.x = x + ch_bounds.x
+                ch_bounds.y = y - ch_bounds.y
+                logging.debug("ch_bounds.x = {}, ch_bounds.y={}".format(ch_bounds.x, ch_bounds.y))
+                #x += ch_bounds.width
+                y += ch_bounds.height
+                bbs.append(np.array(ch_bounds))
+
+        # get the union of characters for cropping:
+        r0 = pygame.Rect(bbs[0])
+        rect_union = r0.unionall(bbs)
+
+        # crop the surface to fit the text:
+        bbs = np.array(bbs)
+        surf_arr, bbs = crop_safe(pygame.surfarray.pixels_alpha(surf), rect_union, bbs, pad=5)
+        surf_arr = surf_arr.swapaxes(0,1)
+        return surf_arr, word_text, bbs
+
+
     def render_rotated(self, font, word_text):
         wl = len(word_text)
         isword = len(word_text.split())==1
@@ -199,7 +241,7 @@ class RenderFont(object):
         rect = font.get_rect(word_text[mid_idx])
         rect.centerx = surf.get_rect().centerx
         rect.centery = surf.get_rect().centery + rect.height
-        # rect.centery +=  curve[mid_idx]
+        rect.centery +=  curve[mid_idx]
         ch_bounds = font.render_to(surf, rect, word_text[mid_idx], rotation=rots[mid_idx])
         ch_bounds.x = rect.x + ch_bounds.x
         ch_bounds.y = rect.y - ch_bounds.y
@@ -291,10 +333,17 @@ class RenderFont(object):
         isword = len(word_text.split())==1
 
         # do curved iff, the length of the word <= 10
-        if not isword or wl > 10 or np.random.rand() > self.p_curved:
+        #if not isword or wl > 10 or np.random.rand() > self.p_curved:
+        rand = np.random.rand()
+        if not isword or wl > 10 or rand > (1.0-self.p_curved):
             return self.render_multiline(font, word_text)
-        elif wl > 2: # TODO: use the oblique property here
+        elif rand < self.p_curved:
+            # curved, continue
+            pass
+        elif wl > 2 and rand < self.p_curved + self.p_rotated:
             return self.render_rotated(font, word_text)
+        else:
+            return self.render_vertical(font, word_text)
         
         #TODO: attempt to do NO curve, NO rotation
         # return self.render_multiline(font, word_text)

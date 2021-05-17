@@ -29,26 +29,31 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0):
     plt.imshow(text_im)
     plt.hold(True)
     H,W = text_im.shape[:2]
+    
+    plot_charBB = False
+    plot_wordBB = True
 
-    # plot the character-BB:
-    for i in xrange(len(charBB_list)):
-        bbs = charBB_list[i]
-        ni = bbs.shape[-1]
-        for j in xrange(ni):
-            bb = bbs[:,:,j]
+    if plot_charBB:
+        # plot the character-BB:
+        for i in xrange(len(charBB_list)):
+            bbs = charBB_list[i]
+            ni = bbs.shape[-1]
+            for j in xrange(ni):
+                bb = bbs[:,:,j]
+                bb = np.c_[bb,bb[:,0]]
+                # given in the format of x=@bb[0,:], y=@bb[1,:]
+                plt.plot(bb[0,:], bb[1,:], 'r', alpha=alpha/2)
+
+    if plot_wordBB:
+        # plot the word-BB:
+        for i in xrange(wordBB.shape[-1]):
+            bb = wordBB[:,:,i]
             bb = np.c_[bb,bb[:,0]]
-            # given in the format of x=@bb[0,:], y=@bb[1,:]
-            plt.plot(bb[0,:], bb[1,:], 'r', alpha=alpha/2)
-
-    # plot the word-BB:
-    for i in xrange(wordBB.shape[-1]):
-        bb = wordBB[:,:,i]
-        bb = np.c_[bb,bb[:,0]]
-        plt.plot(bb[0,:], bb[1,:], 'g', alpha=alpha)
-        # visualize the indiv vertices:
-        vcol = ['r','g','b','k']
-        for j in xrange(4):
-            plt.scatter(bb[0,j],bb[1,j],color=vcol[j])    
+            plt.plot(bb[0,:], bb[1,:], 'g', alpha=alpha)
+            # visualize the indiv vertices:
+            vcol = ['r','g','b','k']
+            for j in xrange(4):
+                plt.scatter(bb[0,j],bb[1,j],color=vcol[j])    
 
     plt.gca().set_xlim([0,W-1])
     plt.gca().set_ylim([H-1,0])
