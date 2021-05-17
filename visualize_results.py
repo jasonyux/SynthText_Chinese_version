@@ -30,7 +30,7 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0):
     plt.hold(True)
     H,W = text_im.shape[:2]
     
-    plot_charBB = False
+    plot_charBB = True
     plot_wordBB = True
 
     if plot_charBB:
@@ -77,8 +77,8 @@ def main(db_fname):
         print "  ** no. of words : ", colorize(Color.YELLOW, wordBB.shape[-1])
         print "  ** text         : ", colorize(Color.GREEN, "**".join(txt))
 
-        if 'q' in raw_input("next? ('q' to exit) : "):
-            break
+        #if 'q' in raw_input("next? ('q' to exit) : "):
+        #    break
     db.close()
 
 if __name__=='__main__':

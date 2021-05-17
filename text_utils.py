@@ -889,6 +889,9 @@ class TextSource(object):
         lines = self.get_lines(nline, nword, nchar_max, f=0.35)
         print 'sample_para_output',lines
         if lines is not None:
+            # if the text is too long, it might cause segmentation error
+            if len(lines) > 25:
+                lines = lines[:25]
             # center align the paragraph-text:
             if np.random.rand() < self.center_para:
                 lines = self.center_align(lines)

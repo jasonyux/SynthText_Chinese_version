@@ -304,11 +304,16 @@ class Colorize(object):
         bg_col,fg_col,i = 0,0,0
         fg_col,bg_col = self.font_color.sample_from_data(bg_arr)
         
-        choice = np.random.choice(2)
+        choice = np.random.rand()
         logging.debug("bg_color={}, fg_color={}".format(bg_col, fg_col))
-        if choice == 0:
-            fg_col = self.font_color.complement(fg_col)
-            bg_col = self.font_color.complement(bg_col)
+        if choice < 0.3: #30% probability of having high contrast color
+            # formula from https://gamedev.stackexchange.com/questions/38536/given-a-rgb-color-x-how-to-find-the-most-contrasting-color-y
+            luma = 0.2126 * fg_col[0] + 0.7152 * fg_col[1] + 0.0722 * fg_col[2];
+            use_black = ( luma > 0.5 )
+            if luma:
+                fg_col = np.array([0,0,0])
+            else:
+                fg_col = np.array([255,255,255])
             logging.debug("bg_color={}, fg_color={}".format(bg_col, fg_col))
         return Layer(alpha=text_arr, color=fg_col), fg_col, bg_col
 
