@@ -65,8 +65,10 @@ class BaselineState(object):
     a = [0.50, 0.05]
 
     # TODO: attempt to do no curve1
+    """
     curve = lambda this, a: lambda x: a*x
     differential = lambda this, a: lambda x: a
+    """
 
     def get_sample(self):
         """
@@ -75,9 +77,12 @@ class BaselineState(object):
         sgn = 1.0
         if np.random.rand() < 0.5:
             sgn = -1
+        a = self.a[1]*np.random.randn() + sgn*self.a[0]
+        """
         a = 20
         if False:
             a = self.a[1]*np.random.randn() + sgn*self.a[0]
+        """
         return {
             'curve': self.curve(a),
             'diff': self.differential(a),
@@ -176,71 +181,31 @@ class RenderFont(object):
         #self.visualize_bb(surf_arr,bbs)
         return surf_arr, words, bbs
 
-    def render_curved(self, font, word_text):
-        """
-        use curved baseline for rendering word
-        """
+    def render_rotated(self, font, word_text):
         wl = len(word_text)
         isword = len(word_text.split())==1
-
-        # do curved iff, the length of the word <= 10
-        if not isword or wl > 10 or np.random.rand() > self.p_curved:
-            return self.render_multiline(font, word_text)
-
-        #TODO: attempt to do NO curve, NO rotation
-        # return self.render_multiline(font, word_text)
-
-        # create the surface:
         lspace = font.get_sized_height() + 1
         lbound = font.get_rect(word_text)
         fsize = (round(2.0*lbound.width), round(3*lspace))
         surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
 
-        # TODO: 
-        angle = 75 # rotates the text clockwise
+        # TODO:
+        angle = 75
         #surf = pygame.transform.rotate(surf, angle)
-
-        logging.debug(colorize(Color.RED, "surface with {}, offset={}".format(surf.get_rect(), surf.get_abs_offset())))
 
         # baseline state
         mid_idx = wl//2
+        
         BS = self.baselinestate.get_sample()
-        
-        # this is the original one, rotation and curve
         curve = [BS['curve'](i-mid_idx) for i in xrange(wl)]
-        #curve[mid_idx] = -np.sum(curve) / (wl-1)
-        #rots  = [-int(math.degrees(math.atan(BS['diff'](i-mid_idx)/(font.size/2)))) for i in xrange(wl)]
-        
-        # TODO: attempt to do rotation without curving (i.e. oblique)
-        rots  = [-int(math.degrees(math.atan(BS['diff'](i-mid_idx)/(font.size)))) for i in xrange(wl)]
-
         rots  = [-angle for i in xrange(wl)]
-        """
-        ang = 1
-        grad = font.size//ang # this thing is randomly generated
-        surf_rect = surf.get_rect()
-        logging.debug("sizes: {}, hieght={}".format(font.get_rect('o'), font.get_sized_height()))
-        #logging.debug("{} {} {}".format(type(font), font.size, font.get_height()))
-        max_grad = (surf_rect.h - font.get_sized_height())/(surf_rect.w - font.size)
-        grad = max_grad * font.size
-        logging.debug("{} top={} left={}, x={}, y={}, topleft={}, bottomright={}".format(
-            type(surf_rect), surf_rect.top, surf_rect.left, surf_rect.x, surf_rect.y, surf_rect.topleft, surf_rect.bottomright))
-        """
-        logging.debug(colorize(Color.RED, "curve: {}".format(curve)))
-        if False:
-            curve = [abs(i)*grad for i in xrange(wl)]
-            curve[mid_idx] = np.sum(curve) / (wl-1)
-            rots  = [-int(math.degrees(math.atan(max_grad))) for i in xrange(wl)]
-            
-            logging.debug(colorize(Color.RED, "simple curve: {}".format([i for i in xrange(wl) ])))
-            logging.debug(colorize(Color.RED, rots))
-
+        
         bbs = []
         # place middle char
         rect = font.get_rect(word_text[mid_idx])
         rect.centerx = surf.get_rect().centerx
         rect.centery = surf.get_rect().centery + rect.height
-        rect.centery +=  curve[mid_idx]
+        # rect.centery +=  curve[mid_idx]
         ch_bounds = font.render_to(surf, rect, word_text[mid_idx], rotation=rots[mid_idx])
         ch_bounds.x = rect.x + ch_bounds.x
         ch_bounds.y = rect.y - ch_bounds.y
@@ -277,30 +242,124 @@ class RenderFont(object):
                 newrect.topleft = (last_rect.topright[0]+2, newrect.topleft[1])
             else:
                 newrect.topright = (last_rect.topleft[0]-2, newrect.topleft[1])
-            #newrect.centery = max(newrect.height, min(fsize[1] - newrect.height, newrect.centery + curve[i]))
 
             # TODO: attempt to do rotation without curving
-            # this does not work if the text is shorter or equal to 2 words
-            if True:
-                if angle <= 45:
-                    y_dist = math.tan(math.radians(angle)) * ((last_rect.width + newrect.width)/2.0)
-                    logging.debug("grad={}, y_dist={}".format(math.tan(math.radians(angle)), y_dist))
-                    if i > mid_idx:
-                        newrect.centery += y_dist
-                    else:
-                        newrect.centery -= y_dist
-                else: # now, instead of shifting y, I shift x
-                    y_dist = ((last_rect.height + newrect.height)/2.0) + 2 # no y-overlap
-                    x_dist = ((last_rect.width + newrect.width)/2.0) - (y_dist / math.tan(math.radians(angle)))
-                    if i > mid_idx:
-                        newrect.centery += y_dist
-                        newrect.centerx -= x_dist
-                    else:
-                        newrect.centery -= y_dist
-                        newrect.centerx += x_dist
+            if angle <= 45:
+                y_dist = math.tan(math.radians(angle)) * ((last_rect.width + newrect.width)/2.0)
+                logging.debug("grad={}, y_dist={}".format(math.tan(math.radians(angle)), y_dist))
+                if i > mid_idx:
+                    newrect.centery += y_dist
+                else:
+                    newrect.centery -= y_dist
+            else: # now, instead of shifting y, I shift x
+                y_dist = ((last_rect.height + newrect.height)/2.0) + 2 # no y-overlap
+                x_dist = ((last_rect.width + newrect.width)/2.0) - (y_dist / math.tan(math.radians(angle)))
+                if i > mid_idx:
+                    newrect.centery += y_dist
+                    newrect.centerx -= x_dist
+                else:
+                    newrect.centery -= y_dist
+                    newrect.centerx += x_dist
                 
             logging.debug(colorize(Color.RED, "[{}]th char {} with y at {}".format(i, ch.encode('utf-8'), newrect.y)))
             logging.debug(colorize(Color.RED, "moved newrect at {}".format(newrect)))
+            try:
+                bbrect = font.render_to(surf, newrect, ch, rotation=rots[i])
+            except ValueError:
+                bbrect = font.render_to(surf, newrect, ch)
+            bbrect.x = newrect.x + bbrect.x
+            bbrect.y = newrect.y - bbrect.y
+            bbs.append(np.array(bbrect))
+            last_rect = newrect
+        
+        # correct the bounding-box order:
+        bbs_sequence_order = [None for i in ch_idx]
+        for idx,i in enumerate(ch_idx):
+            bbs_sequence_order[i] = bbs[idx]
+        bbs = bbs_sequence_order
+
+        # get the union of characters for cropping:
+        r0 = pygame.Rect(bbs[0])
+        rect_union = r0.unionall(bbs)
+
+        # crop the surface to fit the text:
+        bbs = np.array(bbs)
+        surf_arr, bbs = crop_safe(pygame.surfarray.pixels_alpha(surf), rect_union, bbs, pad=5)
+        surf_arr = surf_arr.swapaxes(0,1)
+        return surf_arr, word_text, bbs
+
+    def render_curved(self, font, word_text):
+        """
+        use curved baseline for rendering word
+        """
+        wl = len(word_text)
+        isword = len(word_text.split())==1
+
+        # do curved iff, the length of the word <= 10
+        if not isword or wl > 10 or np.random.rand() > self.p_curved:
+            return self.render_multiline(font, word_text)
+        elif wl > 2:
+            return self.render_rotated(font, word_text)
+        
+        #TODO: attempt to do NO curve, NO rotation
+        # return self.render_multiline(font, word_text)
+
+        # create the surface:
+        lspace = font.get_sized_height() + 1
+        lbound = font.get_rect(word_text)
+        fsize = (round(2.0*lbound.width), round(3*lspace))
+        surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
+
+        # baseline state
+        mid_idx = wl//2
+        BS = self.baselinestate.get_sample()
+        
+        # this is the original one, rotation and curve
+        curve = [BS['curve'](i-mid_idx) for i in xrange(wl)]
+        curve[mid_idx] = -np.sum(curve) / (wl-1)
+        rots  = [-int(math.degrees(math.atan(BS['diff'](i-mid_idx)/(font.size/2)))) for i in xrange(wl)]
+
+        bbs = []
+        # place middle char
+        rect = font.get_rect(word_text[mid_idx])
+        rect.centerx = surf.get_rect().centerx
+        rect.centery = surf.get_rect().centery + rect.height
+        rect.centery +=  curve[mid_idx]
+        ch_bounds = font.render_to(surf, rect, word_text[mid_idx], rotation=rots[mid_idx])
+        ch_bounds.x = rect.x + ch_bounds.x
+        ch_bounds.y = rect.y - ch_bounds.y
+        mid_ch_bb = np.array(ch_bounds)
+
+        # render chars to the left and right:
+        last_rect = rect
+        ch_idx = []
+        for i in xrange(wl):
+            #skip the middle character
+            if i==mid_idx: 
+                bbs.append(mid_ch_bb)
+                ch_idx.append(i)
+                continue
+
+            if i < mid_idx: #left-chars
+                i = mid_idx-1-i
+            elif i==mid_idx+1: #right-chars begin
+                last_rect = rect
+
+            ch_idx.append(i)
+            ch = word_text[i]
+
+            newrect = font.get_rect(ch)
+            newrect.y = last_rect.y
+
+            logging.debug("{} top={} left={}, x={}, y={}, topleft={}, bottomright={}".format(
+            type(newrect), newrect.top, newrect.left, newrect.x, newrect.y, newrect.topleft, newrect.bottomright))
+
+            if i > mid_idx:
+                newrect.topleft = (last_rect.topright[0]+2, newrect.topleft[1])
+            else:
+                newrect.topright = (last_rect.topleft[0]-2, newrect.topleft[1])
+            newrect.centery = max(newrect.height, min(fsize[1] - newrect.height, newrect.centery + curve[i]))
+                
             try:
                 bbrect = font.render_to(surf, newrect, ch, rotation=rots[i])
             except ValueError:
