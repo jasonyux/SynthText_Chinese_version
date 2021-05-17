@@ -97,15 +97,7 @@ def add_res_to_db(imgname,res,db):
     logging.debug('charBB {}'.format(res[i]['charBB']))
     logging.debug('wordBB {}'.format(res[i]['wordBB'].shape))
     logging.debug('wordBB {}'.format(res[i]['wordBB']))
-    '''
-    img = Image.fromarray(res[i]['img'])
-    hsv_img=np.array(rgb2hsv(img))
-    print 'hsv_img_shape',hsv_img.shape
-    print 'hsv_img',hsv_img
-    H=hsv_img[:,:,2]
-    print 'H_channel',H.shape,H
-    #img = Image.fromarray(db['data'][dname][:])
-    '''
+    
     
 def rgb2hsv(image):
     return image.convert('HSV')
@@ -119,129 +111,12 @@ def rgb2gray(image):
     gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
     return gray
 
-""" original    
-def main(viz=False):
-  # open databases:
-  print colorize(Color.BLUE,'getting data..',bold=True)
-  db = get_data()
-  print colorize(Color.BLUE,'\t-> done',bold=True)
-
-  # open the output h5 file:
-  out_db = h5py.File(OUT_FILE,'w')
-  out_db.create_group('/data')
-  print colorize(Color.GREEN,'Storing the output in: '+OUT_FILE, bold=True)
-
-  
-  # get the names of the image files in the dataset:
-  imnames = sorted(db['image'].keys())
-  N = len(imnames)
-  global NUM_IMG
-  if NUM_IMG < 0:
-    NUM_IMG = N
-  start_idx,end_idx = 0,min(NUM_IMG, N)
-
-  RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG)
-  
-  for i in xrange(start_idx,end_idx):
-    t1=time.time()
-    imname = imnames[i]
-    try:
-      # get the image:
-      img = Image.fromarray(db['image'][imname][:])
-      # get the pre-computed depth:
-      #  there are 2 estimates of depth (represented as 2 "channels")
-      #  here we are using the second one (in some cases it might be
-      #  useful to use the other one):
-      #img_resize=img.resize(db['depth'][imname].shape)
-      img_resize=img.resize(db['depth'][imname].shape[1:3])
-      depth = db['depth'][imname][:].T
-      print 'depth shape,img shape',depth.shape,np.array(img).shape
-      print 'depth info',depth
-      print 'depth max min',np.max(depth),np.min(depth)
-      #depth = depth[:,:,1]
-      #modify the depth with HSV H_channel
-      
-      #img_resize=img.resize(depth.shape)
-      hsv_img=np.array(rgb2hsv(img_resize))
-      print 'hsv_img_shape',hsv_img.shape
-      #print 'hsv_img',hsv_img
-      H=hsv_img[:,:,2]
-      H=H.T
-      H=H.astype('float32')
-      print 'H_channel',H.shape,H 
-      print 'H_max min',np.max(H),np.min(H)
-      print 'scale',np.max(depth)/np.max(H)
-      #depth= (np.max(depth)/np.max(H))*H
-      #depth= H
-      #print np.isnan(H).any()
-      #print np.isinf(H).any()
-      #print np.isnan(depth).any()
-      #print np.isinf(depth).any()
-      print 'depth shape',depth.shape
-      #print 'depth info',depth
-      print 'depth max min',np.max(depth),np.min(depth)
-      
-      gray=np.array(rgb2gray(img_resize))
-      #print 'gray',gray.shape,gray
-      depth= (np.max(depth)/np.max(gray))*gray.astype('float32')
-      #add more blur 
-      #mean blur 
-      kernel = np.ones((5,5),np.float32)/25
-      gray = cv2.filter2D(gray,-1,kernel)
-      #print 'gray',gray.shape,gray
-      
-      # get segmentation:
-      seg = db['seg'][imname][:].astype('float32')
-      area = db['seg'][imname].attrs['area']
-      label = db['seg'][imname].attrs['label']
-      
-      print 'seg info',seg.shape,area.shape,label.shape
-      # re-size uniformly:
-      sz = depth.shape[:2][::-1]
-      img = np.array(img.resize(sz,Image.ANTIALIAS))
-      seg = np.array(Image.fromarray(seg).resize(sz,Image.NEAREST))
-
-      print depth.shape
-
-      print colorize(Color.RED,'%d of %d'%(i,end_idx-1), bold=True)
-      res = RV3.render_text(img,depth,seg,area,label,
-                            ninstance=INSTANCE_PER_IMAGE,viz=viz)
-      t2=time.time()
-      
-      
-      for ct in range(5):
-      
-        if len(res) > 0:  
-            # non-empty : successful in placing text:
-            add_res_to_db(imname,res,out_db)
-            break
-        else:
-            res = RV3.render_text(img,depth,seg,area,label,
-                            ninstance=INSTANCE_PER_IMAGE,viz=viz)
-      # visualize the output:
-      print 'time consume in each pic',t2-t1
-      if viz:
-        if 'q' in raw_input(colorize(Color.RED,'continue? (enter to continue, q to exit): ',True)):
-          break
-    except:
-      traceback.print_exc()
-      print colorize(Color.GREEN,'>>>> CONTINUING....', bold=True)
-      continue
-  
-  db.close()
-  out_db.close()
-"""
 
 def main(viz=False):
   # open databases:
   logging.info(colorize(Color.BLUE,'getting data..',bold=True))
+  
   #add more data into the dset
-  """
-  more_depth_path='data/game_dset/depth.h5'
-  more_seg_path='data/game_dset/seg.h5'
-
-  im_dir='data/game_dset/images/results'
-  """
   depth_db = h5py.File(DEPTH_PATH,'r')
   seg_db = h5py.File(SEG_PATH,'r')
 
@@ -252,12 +127,8 @@ def main(viz=False):
   out_db.create_group('/data')
   logging.info(colorize(Color.GREEN,'Storing the output in: '+OUT_FILE, bold=True))
 
-
   RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG)
-  """
-  with open('imnames.cp', 'rb') as f:
-    filtered_imnames = set(cp.load(f))
-  """
+
   for imname in imnames[:2]:
     # ignore if not in filetered list:
     # if imname not in filtered_imnames: continue
