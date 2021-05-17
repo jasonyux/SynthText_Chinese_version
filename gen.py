@@ -36,10 +36,19 @@ DB_FNAME = osp.join(DATA_PATH,'dset.h5')
 # url of the data (google-drive public file):
 DATA_URL = 'http://www.robots.ox.ac.uk/~ankush/data.tar.gz'
 
+""" 
+#used for debuggin
 OUT_FILE = 'results/SynthText_game.h5' #TODO: changed for testing
 DEPTH_PATH='data/game_dset/prev_work/depth.h5'
 SEG_PATH='data/game_dset/prev_work/seg.h5'
 IM_DIR='data/game_dset/prev_work/images'
+"""
+
+# used for production
+OUT_FILE = 'results/SynthText_game_3000.h5' #TODO: changed for testing
+DEPTH_PATH='data/game_dset/depth.h5'
+SEG_PATH='data/game_dset/seg.h5'
+IM_DIR='data/game_dset/images/results'
 
 def get_data():
   """
@@ -129,7 +138,7 @@ def main(viz=False):
 
   RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG)
 
-  for imname in imnames[:]:
+  for imname in imnames[:10]:
     # ignore if not in filetered list:
     # if imname not in filtered_imnames: continue
     t1=time.time()

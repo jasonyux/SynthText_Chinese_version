@@ -378,6 +378,9 @@ class RendererV3(object):
 
         self.max_time = max_time
 
+        # probability of having text not going through homographic transform
+        self.p_parallel = 0.7
+
     def filter_regions(self,regions,filt):
         """
         filt : boolean list of regions to keep.
@@ -511,24 +514,18 @@ class RendererV3(object):
         # update the collision mask with text:
         collision_mask += (255 * (text_mask>0)).astype('uint8')
 
-        # warp the object mask back onto the image:
-        text_mask_orig = text_mask.copy()
-        bb_orig = bb.copy()
-        text_mask = self.warpHomography(text_mask,H,rgb.shape[:2][::-1])
-        bb = self.homographyBB(bb,Hinv)
-
-        if not self.bb_filter(bb_orig,bb,text):
-            colorize(Color.RED, 'bad charBB statistics')
-            #warn("bad charBB statistics")
-            return #None
-
-        # attempt create text without transforming them
-        # if this is True, then text will be parallel to the image 
+        # warp the object mask back onto the image, or leave them parallel to image
+        # if this is False, then text will be parallel to the image 
         # (i.e. normal of the text surface the same as the normal of the image)
-        render_parallel = True
-        if render_parallel:
-            bb = bb_orig
-            text_mask = text_mask_orig
+        if np.random.rand() > self.p_parallel:
+            text_mask_orig = text_mask.copy()
+            bb_orig = bb.copy()
+            text_mask = self.warpHomography(text_mask,H,rgb.shape[:2][::-1])
+            bb = self.homographyBB(bb,Hinv)
+            if not self.bb_filter(bb_orig,bb,text):
+                colorize(Color.RED, 'bad charBB statistics')
+                #warn("bad charBB statistics")
+                return #None
 
         # get the minimum height of the character-BB:
         min_h = self.get_min_h(bb,text)

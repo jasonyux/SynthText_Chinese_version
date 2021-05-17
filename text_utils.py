@@ -711,7 +711,7 @@ class TextSource(object):
         random.shuffle(files)
         filecnt=10
         self.txt=[]
-        for filename in files:
+        for filename in files: #TODO: add distribution here for text sources
             filecnt-=1
             if filecnt==0:
                 break            
