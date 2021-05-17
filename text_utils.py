@@ -69,7 +69,6 @@ class BaselineState(object):
     curve = lambda this, a: lambda x: a*x
     differential = lambda this, a: lambda x: a
     """
-
     def get_sample(self):
         """
         Returns the functions for the curve and differential for a and b
@@ -78,11 +77,6 @@ class BaselineState(object):
         if np.random.rand() < 0.5:
             sgn = -1
         a = self.a[1]*np.random.randn() + sgn*self.a[0]
-        """
-        a = 20
-        if False:
-            a = self.a[1]*np.random.randn() + sgn*self.a[0]
-        """
         return {
             'curve': self.curve(a),
             'diff': self.differential(a),
@@ -189,8 +183,8 @@ class RenderFont(object):
         fsize = (round(2.0*lbound.width), round(3*lspace))
         surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
 
-        # TODO:
-        angle = 75
+        angle = np.random.randint(low=10, high=80)
+        logging.debug("angle={}".format(angle))
         #surf = pygame.transform.rotate(surf, angle)
 
         # baseline state
@@ -243,7 +237,7 @@ class RenderFont(object):
             else:
                 newrect.topright = (last_rect.topleft[0]-2, newrect.topleft[1])
 
-            # TODO: attempt to do rotation without curving
+            # do rotation without curving
             if angle <= 45:
                 y_dist = math.tan(math.radians(angle)) * ((last_rect.width + newrect.width)/2.0)
                 logging.debug("grad={}, y_dist={}".format(math.tan(math.radians(angle)), y_dist))
@@ -254,6 +248,7 @@ class RenderFont(object):
             else: # now, instead of shifting y, I shift x
                 y_dist = ((last_rect.height + newrect.height)/2.0) + 2 # no y-overlap
                 x_dist = ((last_rect.width + newrect.width)/2.0) - (y_dist / math.tan(math.radians(angle)))
+                logging.debug("grad={}, y_dist={}, x_dist={}".format(math.tan(math.radians(angle)), y_dist, x_dist))
                 if i > mid_idx:
                     newrect.centery += y_dist
                     newrect.centerx -= x_dist
@@ -298,7 +293,7 @@ class RenderFont(object):
         # do curved iff, the length of the word <= 10
         if not isword or wl > 10 or np.random.rand() > self.p_curved:
             return self.render_multiline(font, word_text)
-        elif wl > 2:
+        elif wl > 2: # TODO: use the oblique property here
             return self.render_rotated(font, word_text)
         
         #TODO: attempt to do NO curve, NO rotation
