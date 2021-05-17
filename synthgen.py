@@ -21,6 +21,7 @@ import text_utils as tu
 from colorize3_poisson import Colorize
 from common import *
 import traceback, itertools
+import pygame
 import logging
 
 
@@ -380,6 +381,9 @@ class RendererV3(object):
 
         # probability of having text not going through homographic transform
         self.p_parallel = 0.7
+        
+        # used for collision checks
+        self.placed_rects = []
 
     def filter_regions(self,regions,filt):
         """
@@ -509,7 +513,30 @@ class RendererV3(object):
         else:
             text_mask,loc,bb,text = render_res
             #text=text.decode('utf-8')
-            
+        
+        bbx = bb.tolist()[0]
+        bby = bb.tolist()[1]
+        num_boxes = len(bbx[0])
+        bbs = []
+        for pos in range(num_boxes):
+            left = bbx[0][pos]
+            top = bby[0][pos]
+            width = abs(bbx[1][pos] - bbx[0][pos])
+            height = abs(bby[-1][pos] - bby[0][pos])
+            bbs.append(pygame.Rect(left, top, width, height))
+
+        r0 = pygame.Rect(bbs[0])
+        rect_union = r0.unionall(bbs)
+        # detect collision among already placed rects/words
+        for rect in self.placed_rects:
+            #TODO: if collided, return None
+            if pygame.Rect.colliderect(rect, rect_union):
+                logging.info(colorize(Color.RED, "collided newrect{} with {}".format(rect_union, rect)))
+                return None
+        
+        # update already placed text regions
+        self.placed_rects.append(rect_union)
+        logging.info(colorize(Color.RED, "added newrect{} with {}".format(rect_union, text.encode('utf-8'))))
         
         # update the collision mask with text:
         collision_mask += (255 * (text_mask>0)).astype('uint8')
@@ -645,7 +672,7 @@ class RendererV3(object):
 
             m = self.get_num_text_regions(nregions)#np.arange(nregions)#min(nregions, 5*ninstance*self.max_text_regions))
             reg_idx = np.arange(min(2*m,nregions))
-            #np.random.shuffle(reg_idx)
+            np.random.shuffle(reg_idx)
             reg_idx = reg_idx[:m]
 
             placed = False
@@ -655,7 +682,7 @@ class RendererV3(object):
 
             # process regions: 
             num_txt_regions = len(reg_idx)
-            NUM_REP = 5 # re-use each region three times:
+            NUM_REP = 5 # re-use each region five times:
             reg_range = np.arange(NUM_REP * num_txt_regions) % num_txt_regions
             for idx in reg_range:
                 ireg = reg_idx[idx]
@@ -685,7 +712,7 @@ class RendererV3(object):
                     # store the result:
                     itext.append(text)
                     ibb.append(bb)
-                    print colorize(Color.GREEN, 'text in synthgen.py/render_text append into itext '+text)
+                    logging.info(colorize(Color.GREEN, 'text in synthgen.py/render_text append into itext '+text.encode('utf-8')))
 
             if  placed:
                 # at least 1 word was placed in this instance:
@@ -693,7 +720,7 @@ class RendererV3(object):
                 idict['txt'] = itext
                 idict['charBB'] = np.concatenate(ibb, axis=2)
                 idict['wordBB'] = self.char2wordBB(idict['charBB'].copy(), ' '.join(itext))
-                print colorize(Color.GREEN, itext)
+                logging.info(colorize(Color.GREEN, itext))
                 res.append(idict.copy())
                 if viz:
                     viz_textbb(1,img, [idict['wordBB']], alpha=1.0)

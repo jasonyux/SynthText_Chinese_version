@@ -44,6 +44,7 @@ def crop_safe(arr, rect, bbs=[], pad=0):
     Does safe cropping. Returns the cropped rectangle and
     the adjusted bounding-boxes
     """
+    logging.debug("original rect_union {}".format(rect))
     rect = np.array(rect)
     rect[:2] -= pad
     rect[2:] += 2*pad
@@ -227,7 +228,7 @@ class RenderFont(object):
 
         angle = np.random.randint(low=10, high=80)
         logging.debug("angle={}".format(angle))
-        #surf = pygame.transform.rotate(surf, angle)
+        surf = pygame.transform.rotate(surf, angle)
 
         # baseline state
         mid_idx = wl//2
@@ -344,9 +345,6 @@ class RenderFont(object):
             return self.render_rotated(font, word_text)
         else:
             return self.render_vertical(font, word_text)
-        
-        #TODO: attempt to do NO curve, NO rotation
-        # return self.render_multiline(font, word_text)
 
         # create the surface:
         lspace = font.get_sized_height() + 1
@@ -422,10 +420,12 @@ class RenderFont(object):
         # get the union of characters for cropping:
         r0 = pygame.Rect(bbs[0])
         rect_union = r0.unionall(bbs)
+        # logging.debug("working union {}".format(bbs))
 
         # crop the surface to fit the text:
         bbs = np.array(bbs)
         surf_arr, bbs = crop_safe(pygame.surfarray.pixels_alpha(surf), rect_union, bbs, pad=5)
+        logging.debug("cropped union {}".format(bbs))
         surf_arr = surf_arr.swapaxes(0,1)
         return surf_arr, word_text, bbs
 
