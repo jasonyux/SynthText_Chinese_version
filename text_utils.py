@@ -201,19 +201,22 @@ class RenderFont(object):
 
         # y needs to be offsetted for correct rendering
         ch_bounds = font.render_to(surf, (x,y), word_text[0])
-        y += ch_bounds.height + 1 #for padding
+        ch_bounds.y = y - ch_bounds.y
+        y += ch_bounds.height + 2 #for padding
+        first_width = ch_bounds.width
 
         for ch in word_text: # render each character
             if ch.isspace(): # just shift
                 y += space.width
             else:
+                temp = font.render_to(surf, (x,y), ch)
                 # render the character
-                logging.debug("vertical rendering {} to {},{}".format(ch.encode('utf-8'), x, y))
-                ch_bounds = font.render_to(surf, (x,y), ch)
-                ch_bounds.x = x + ch_bounds.x
+                x_diff = (first_width - temp.width)/2.0
+                ch_bounds = font.render_to(surf, (x+x_diff,y), ch)
+                # center align it
                 ch_bounds.y = y - ch_bounds.y
                 #x += ch_bounds.width
-                y += ch_bounds.height
+                y += ch_bounds.height + 2
                 bbs.append(np.array(ch_bounds))
 
         # get the union of characters for cropping:

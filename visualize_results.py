@@ -71,7 +71,7 @@ def main(db_fname):
         print "image name        : ", colorize(Color.RED, k, bold=True)
         print "  ** no. of chars : ", colorize(Color.YELLOW, charBB.shape[-1])
         print "  ** no. of words : ", colorize(Color.YELLOW, wordBB.shape[-1])
-        print "  ** text         : ", colorize(Color.GREEN, "**".join(txt))
+        print "  ** text         : ", colorize(Color.GREEN, "--".join(txt))
 
         #if 'q' in raw_input("next? ('q' to exit) : "):
         #    break

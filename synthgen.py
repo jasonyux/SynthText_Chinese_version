@@ -655,13 +655,15 @@ class RendererV3(object):
             bottomright = [wordBB[0][2][i], wordBB[1][2][i]]
             bottomleft = [wordBB[0][3][i], wordBB[1][3][i]]
             
-            if topright[1] > bottomright[1]:
+            if topright[1] > bottomright[1] or topright[0] < bottomright[0]:
                 # need fix, topright_y should always be smaller than bottomright_y
+                # and that topright_x should always be larger or equal to bottomright_x
                 logging.debug(colorize(Color.RED, "wordBB correction"))
                 wordBB[0][2][i], wordBB[1][2][i] = topright
                 wordBB[0][1][i], wordBB[1][1][i] = bottomright
-            if topleft[1] > bottomleft[1]:
+            if topleft[1] > bottomleft[1] or topleft[0] < bottomleft[0]:
                 # need fix, topleft_y should always be smaller than bottomleft_y
+                # and that topleft_x should always be larger or equal to bottomleft_x
                 logging.debug(colorize(Color.RED, "wordBB correction"))
                 wordBB[0][0][i], wordBB[1][0][i] = bottomleft
                 wordBB[0][3][i], wordBB[1][3][i] = topleft
