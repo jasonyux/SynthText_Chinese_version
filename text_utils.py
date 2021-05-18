@@ -196,7 +196,7 @@ class RenderFont(object):
         return surf_arr, words, bbs
 
 
-    def render_vertical(self, font, word_text):
+    def render_vertical(self, font, word_text, rotated=False):
         wl = len(word_text)
         isword = len(word_text.split())==1
         lspace = font.get_sized_height() + 1
@@ -213,20 +213,77 @@ class RenderFont(object):
         ch_bounds.y = y - ch_bounds.y
         y += ch_bounds.height + 2 #for padding
         first_width = ch_bounds.width
+        first_height = ch_bounds.height
 
+        angle = 0
+        if rotated:
+            angle = np.random.randint(low=10, high=80)
+        logging.debug(colorize(Color.RED, "angle={}".format(angle)))
+        
+        last_w = None
+        last_h = None
         for ch in word_text: # render each character
-            if ch.isspace(): # just shift
-                y += space.width
-            else:
-                temp = font.render_to(surf, (x,y), ch)
-                # render the character
-                x_diff = (first_width - temp.width)/2.0
-                ch_bounds = font.render_to(surf, (x+x_diff,y), ch)
-                # center align it
-                ch_bounds.y = y - ch_bounds.y
-                #x += ch_bounds.width
-                y += ch_bounds.height + 2
-                bbs.append(np.array(ch_bounds))
+            if not rotated: # TODO: merge and simplify with rotated case
+                if ch.isspace(): # just shift
+                    y += space.width
+                else:
+                    temp = font.render_to(surf, (x,y), ch)
+                    # render the character
+                    x_diff = (first_width - temp.width)/2.0
+                    ch_bounds = font.render_to(surf, (x+x_diff,y), ch)
+                    # center align it
+                    ch_bounds.y = y - ch_bounds.y
+                    #x += ch_bounds.width
+                    y += ch_bounds.height + 2
+                    bbs.append(np.array(ch_bounds))
+            if rotated:
+                if angle <= 45:
+                    if ch.isspace(): # just shift
+                        y += space.width
+                        # if last_h==None, we are dealing with the first character
+                        x_diff = 0 if last_h is None else math.tan(math.radians(angle)) * (space.height + last_h)/2
+                        x -= x_diff
+                        last_h = space.height
+                    else:
+                        temp = font.render_to(surf, (x,y), ch)
+                        # render the character
+                        # center align it
+                        x -= (first_width - temp.width)/2.0
+                        # compute shift
+                        x_diff = 0 if last_h is None else math.tan(math.radians(angle)) * (temp.height + last_h)/2
+                        x -= x_diff
+                        last_h = temp.height
+
+                        ch_bounds = font.render_to(surf, (x,y), ch)
+        
+                        ch_bounds.y = y - ch_bounds.y
+                        #x += ch_bounds.width
+                        y += ch_bounds.height + 2
+                        bbs.append(np.array(ch_bounds))
+                else:
+                    if ch.isspace(): # just shift
+                        x -= space.width
+                        # if last_w==None, we are dealing with the first character
+                        y_diff = 0 if last_w is None else ((last_w + space.width)/2) * (1/math.tan(math.radians(angle)))
+                        y += y_diff
+                        last_w = space.width
+                    else:
+                        temp = font.render_to(surf, (x,y), ch)
+                        # render the character
+                        # center align it
+                        y += (first_height - temp.height)/2.0
+                        # compute shift
+                        y_diff = 0 if last_w is None else ((last_w + temp.width)/2) * (1/math.tan(math.radians(angle)))
+                        y += y_diff
+                        last_w = temp.width
+
+                        ch_bounds = font.render_to(surf, (x,y), ch)
+        
+                        ch_bounds.y = y - ch_bounds.y
+                        #x += ch_bounds.width
+                        x -= ch_bounds.width + 2
+                        bbs.append(np.array(ch_bounds))
+
 
         # get the union of characters for cropping:
         r0 = pygame.Rect(bbs[0])
@@ -358,15 +415,18 @@ class RenderFont(object):
         # do curved iff, the length of the word <= 10
         #if not isword or wl > 10 or np.random.rand() > self.p_curved:
         rand = np.random.rand()
-        if not isword or wl > 10 or rand > (1.0-self.p_curved):
+        rotation = True if np.random.rand() < self.p_rotated else False
+        # TODO: this branching could be improved
+        if not isword or wl > 10 or rand > (1.0-self.p_curved) or not rotation:
+            # horizontal not rotated
             return self.render_multiline(font, word_text)
-        elif rand < self.p_curved:
+        elif rand < self.p_curved or wl <= 2:
             # curved, continue
             pass
-        elif wl > 2 and rand < self.p_curved + self.p_rotated:
+        elif rand < self.p_vertical: #vertical rotated
+            return self.render_vertical(font, word_text, rotated=rotation)
+        else: # horizontal rotated
             return self.render_rotated(font, word_text)
-        else:
-            return self.render_vertical(font, word_text)
 
         # create the surface:
         lspace = font.get_sized_height() + 1
@@ -619,7 +679,7 @@ class FontState(object):
     strength = [0.05, 0.1]  # uniform dist in this interval
     underline_adjustment = [1.0, 2.0]  # normal dist mean, std
     kerning = [2, 5, 0, 20]  # beta distribution alpha, beta, offset, range (mean is a/(a+b))
-    border = 0.25
+    border = 0.5 # increased for visual effects
     random_caps = -1 ## don't recapitalize : retain the capitalization of the lexicon
     capsmode = [str.lower, str.upper, str.capitalize]  # lower case, upper case, proper noun
     curved = 0.2
