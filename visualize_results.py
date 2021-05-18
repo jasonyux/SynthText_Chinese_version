@@ -15,15 +15,12 @@ import matplotlib.pyplot as plt
 import h5py 
 from common import *
 
-num = 0
-
-def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0):
+def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0, image_name=None):
     """
     text_im : image containing text
     charBB_list : list of 2x4xn_i bounding-box matrices
     wordBB : 2x4xm matrix of word coordinates
     """
-    global num
     plt.close(1)
     plt.figure(1)
     plt.imshow(text_im)
@@ -58,8 +55,7 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0):
     plt.gca().set_xlim([0,W-1])
     plt.gca().set_ylim([H-1,0])
     plt.show(block=False)
-    plt.savefig("out_images/test{}.png".format(num))
-    num += 1
+    plt.savefig("out_images/{}.png".format(image_name.encode('utf-8')))
 
 def main(db_fname):
     db = h5py.File(db_fname, 'r')
@@ -71,7 +67,7 @@ def main(db_fname):
         wordBB = db['data'][k].attrs['wordBB']
         txt = db['data'][k].attrs['txt']
 
-        viz_textbb(rgb, [charBB], wordBB)
+        viz_textbb(rgb, [charBB], wordBB, image_name=k)
         print "image name        : ", colorize(Color.RED, k, bold=True)
         print "  ** no. of chars : ", colorize(Color.YELLOW, charBB.shape[-1])
         print "  ** no. of words : ", colorize(Color.YELLOW, wordBB.shape[-1])

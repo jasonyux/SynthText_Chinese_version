@@ -44,7 +44,6 @@ def crop_safe(arr, rect, bbs=[], pad=0, rotated=False):
     Does safe cropping. Returns the cropped rectangle and
     the adjusted bounding-boxes
     """
-    logging.debug("original rect_union {}".format(rect))
     rect = np.array(rect)
     if rotated:
         # if rotated, increase x and decrease y
@@ -115,12 +114,12 @@ class RenderFont(object):
 
         # curved baseline:
         #self.p_curved = 1.0
-        self.p_curved = 0.3
+        self.p_curved = 0 #0.3
         self.baselinestate = BaselineState()
 
         # rotation only / vertical
-        self.p_rotated = 0.4
-        self.p_vertical = 0.3
+        self.p_rotated = 0 #0.4
+        self.p_vertical = 1 #0.3
 
         # text-source : gets english text:
         # now this folder modified to contain only chinese texts
@@ -193,22 +192,26 @@ class RenderFont(object):
         isword = len(word_text.split())==1
         lspace = font.get_sized_height() + 1
         lbound = font.get_rect(word_text)
-        fsize = (round(2.0*lbound.width), round(3*lspace))
+        fsize = (round(2.0*lbound.width), round(wl*lspace))
         surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
         
         bbs = []
         space = font.get_rect(' ')
         x, y = 0, 0
 
+        # y needs to be offsetted for correct rendering
+        ch_bounds = font.render_to(surf, (x,y), word_text[0])
+        y += ch_bounds.height + 1 #for padding
+
         for ch in word_text: # render each character
             if ch.isspace(): # just shift
                 y += space.width
             else:
                 # render the character
+                logging.debug("vertical rendering {} to {},{}".format(ch.encode('utf-8'), x, y))
                 ch_bounds = font.render_to(surf, (x,y), ch)
-                #ch_bounds.x = x + ch_bounds.x
+                ch_bounds.x = x + ch_bounds.x
                 ch_bounds.y = y - ch_bounds.y
-                logging.debug("ch_bounds.x = {}, ch_bounds.y={}".format(ch_bounds.x, ch_bounds.y))
                 #x += ch_bounds.width
                 y += ch_bounds.height
                 bbs.append(np.array(ch_bounds))
@@ -216,6 +219,7 @@ class RenderFont(object):
         # get the union of characters for cropping:
         r0 = pygame.Rect(bbs[0])
         rect_union = r0.unionall(bbs)
+        logging.debug("vertical union rect{}".format(rect_union))
 
         # crop the surface to fit the text:
         bbs = np.array(bbs)
