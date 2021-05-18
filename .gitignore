@@ -3,6 +3,7 @@
 
 # secret data file
 data/game_texts/
+data/fonts/
 *.png
 
 # Byte-compiled / optimized / DLL files

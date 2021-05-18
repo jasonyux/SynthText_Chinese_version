@@ -9,6 +9,21 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import cPickle as cp
 import os.path as osp
+import os
+
+
+def populate_fontlist(path, out_file):
+	my_fontlist = []
+	for filename in os.listdir(path):
+		if filename.endswith('.ttf') or filename.endswith('.TTF'):
+			fontfile = filename.decode('utf-8')
+			parent_dir = os.path.basename(os.path.normpath(path))
+			print(osp.join(parent_dir, fontfile))
+			my_fontlist.append(osp.join(parent_dir, fontfile))
+
+	with open(out_file, 'w') as open_file:
+		for font in my_fontlist:
+			open_file.write('{}\n'.format(font.encode('utf-8')))
 
 
 pygame.init()
@@ -20,11 +35,14 @@ A = np.c_[ys,np.ones_like(ys)]
 xs = []
 models = {} #linear model
 
+# this function only needs to be run once
+# populate_fontlist("data/fonts/more_font", "data/fonts/fontlist.txt")
+
 FS = FontState()
 #plt.figure()
 #plt.hold(True)
 for i in xrange(len(FS.fonts)):
-	print i
+	print i, FS.fonts[i]
 	font = freetype.Font(FS.fonts[i], size=12)
 	h = []
 	for y in ys:

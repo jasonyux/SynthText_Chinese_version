@@ -114,12 +114,21 @@ class RenderFont(object):
 
         # curved baseline:
         #self.p_curved = 1.0
-        self.p_curved = 0.3
+        # either it is curved, or not
+        self.p_curved = 0.1
         self.baselinestate = BaselineState()
 
+        # not curved but rotated
+        self.p_rotated = 0.2
+
+        # vertical alignmnent vs horizontal alignment
+        self.p_vertical = 0.2
+        """
         # rotation only / vertical
         self.p_rotated = 0.4
         self.p_vertical = 0.3
+        """
+        
 
         # text-source : gets english text:
         # now this folder modified to contain only chinese texts
@@ -945,8 +954,8 @@ class TextSource(object):
                 temp.append(self.strip_emoji_from_word(word))
             lines = temp
             # if the text is too long, it might cause segmentation error
-            if len(lines) > 25:
-                lines = lines[:25]
+            if len(lines) > 5:
+                lines = lines[:5]
             # center align the paragraph-text:
             if np.random.rand() < self.center_para:
                 lines = self.center_align(lines)

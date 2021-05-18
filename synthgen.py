@@ -381,7 +381,7 @@ class RendererV3(object):
         self.max_time = max_time
 
         # probability of having text not going through homographic transform
-        self.p_parallel = 0.7
+        self.p_parallel = 0.9
         
         # used for collision checks
         self.placed_rects = []
