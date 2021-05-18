@@ -114,12 +114,12 @@ class RenderFont(object):
 
         # curved baseline:
         #self.p_curved = 1.0
-        self.p_curved = 0 #0.3
+        self.p_curved = 0.3
         self.baselinestate = BaselineState()
 
         # rotation only / vertical
-        self.p_rotated = 0 #0.4
-        self.p_vertical = 1 #0.3
+        self.p_rotated = 0.4
+        self.p_vertical = 0.3
 
         # text-source : gets english text:
         # now this folder modified to contain only chinese texts
@@ -842,6 +842,20 @@ class TextSource(object):
         else:
             return lines
 
+    def is_emoji(self, ch):
+        emoji_start = u'\U0001f600'
+        return ch > emoji_start
+
+    def strip_emoji_from_word(self, word):
+        word = list(word)
+        result = []
+        for char in word:
+            if not self.is_emoji(char):
+                result.append(char)
+            else:
+                logging.debug(colorize(Color.RED, "stripped {}".format(char.encode('utf-8'))))
+        return "".join(result)
+
     def sample(self, nline_max,nchar_max,kind='WORD'):
         #print 'sample_output',self.fdict[kind](nline_max,nchar_max)
         return self.fdict[kind](nline_max,nchar_max)
@@ -866,6 +880,7 @@ class TextSource(object):
             iter += 1
         #print colorize(Color.GREEN, rand_word)
         print 'sample_word_output',rand_word
+        rand_word = self.strip_emoji_from_word(rand_word)
         if not self.is_good([rand_word])[0] or len(rand_word)>nchar_max:
             return []
         else:
@@ -900,8 +915,12 @@ class TextSource(object):
         nword = [max(1,int(np.ceil(n))) for n in nword]
 
         lines = self.get_lines(nline, nword, nchar_max, f=0.35)
-        print 'sample_para_output',lines
+        logging.debug('sample_para_output {}'.format(lines))
         if lines is not None:
+            temp = []
+            for word in lines:
+                temp.append(self.strip_emoji_from_word(word))
+            lines = temp
             # if the text is too long, it might cause segmentation error
             if len(lines) > 25:
                 lines = lines[:25]
