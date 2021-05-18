@@ -93,14 +93,15 @@ def add_res_to_db(imgname,res,db):
   and other metadata to the dataset.
   """
   ninstance = len(res)
+  logging.info(colorize(Color.GREEN, "{} has text rendered".format(imgname.encode('utf-8'))))
   for i in xrange(ninstance):
-    print colorize(Color.GREEN,'added into the db %s '%res[i]['txt'])
+    logging.info(colorize(Color.GREEN,'added into the db %s '%res[i]['txt']))
     
     dname = "%s_%d"%(imgname, i)
     db['data'].create_dataset(dname,data=res[i]['img'])
     db['data'][dname].attrs['charBB'] = res[i]['charBB']
     db['data'][dname].attrs['wordBB'] = res[i]['wordBB']
-    print 'type of res[i][\'txt\'] ',type(res[i]['txt'])
+    logging.debug('type of res[i][\'txt\'] {}'.format(type(res[i]['txt'])))
          
     # edited in the same manner as original repo
     #"""
@@ -149,7 +150,7 @@ def main(viz=False):
 
   RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG)
 
-  for imname in imnames[50:150]:
+  for imname in imnames[50:65]:
     # ignore if not in filetered list:
     # if imname not in filtered_imnames: continue
     t1=time.time()
@@ -187,13 +188,15 @@ def main(viz=False):
             res = RV3.render_text(img,depth,seg,area,label,
                             ninstance=INSTANCE_PER_IMAGE,viz=viz)
       # visualize the output:
-      logging.info('time consume in each pic {}'.format(t2-t1))
+      logging.info('time consume in pic {}'.format(t2-t1))
       if viz:
         if 'q' in raw_input(colorize(Color.RED,'continue? (enter to continue, q to exit): ',True)):
           break
     except:
       traceback.print_exc()
       logging.info(colorize(Color.GREEN,'>>>> CONTINUING....', bold=True))
+    
+    RV3.reset()
     continue
   
   depth_db.close()
@@ -206,5 +209,5 @@ if __name__=='__main__':
   parser.add_argument('--viz',action='store_true',dest='viz',default=False,help='flag for turning on visualizations')
   args = parser.parse_args()
 
-  logging.basicConfig(level=logging.INFO)
+  logging.basicConfig(level=logging.DEBUG)
   main(args.viz)

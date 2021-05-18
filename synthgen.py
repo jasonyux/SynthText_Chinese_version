@@ -385,6 +385,10 @@ class RendererV3(object):
         # used for collision checks
         self.placed_rects = []
 
+    # clean up after an image is done
+    def reset(self):
+        self.placed_rects = []
+
     def filter_regions(self,regions,filt):
         """
         filt : boolean list of regions to keep.
@@ -611,6 +615,19 @@ class RendererV3(object):
                 d = np.sum(np.linalg.norm(box[perm4[pidx],:]-cc_tblr,axis=1))
                 dists.append(d)
             wordBB[:,:,i] = box[perm4[np.argmin(dists)],:].T
+
+        # fix for rotated text
+        #TODO: add collision detection here?
+        num_boxes = len(wordBB[0][0])
+        for i in range(num_boxes):
+            bottomright = [wordBB[0][2][i], wordBB[1][2][i]]
+            topright = [wordBB[0][1][i], wordBB[1][1][i]]
+            if topright[1] > bottomright[1]:
+                # need fix, topright_y should always be smaller than bottomright_y
+                logging.debug(colorize(Color.RED, "wordBB correction"))
+                wordBB[0][2][i], wordBB[1][2][i] = topright
+                wordBB[0][1][i], wordBB[1][1][i] = bottomright
+        logging.debug("computed wordBB {}, botright={} topright={}".format(wordBB, bottomright, topright))
 
         return wordBB
 

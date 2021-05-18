@@ -34,7 +34,7 @@ def move_bb(bbs, t):
     """
     return bbs + t[:,None,None]
 
-def crop_safe(arr, rect, bbs=[], pad=0):
+def crop_safe(arr, rect, bbs=[], pad=0, rotated=False):
     """
     ARR : arr to crop
     RECT: (x,y,w,h) : area to crop to
@@ -46,8 +46,14 @@ def crop_safe(arr, rect, bbs=[], pad=0):
     """
     logging.debug("original rect_union {}".format(rect))
     rect = np.array(rect)
-    rect[:2] -= pad
-    rect[2:] += 2*pad
+    if rotated:
+        # if rotated, increase x and decrease y
+        rect[0] += pad
+        rect[0] -= pad
+        rect[2:] += 2*pad
+    else:
+        rect[:2] -= pad
+        rect[2:] += 2*pad
     v0 = [max(0,rect[0]), max(0,rect[1])]
     v1 = [min(arr.shape[0], rect[0]+rect[2]), min(arr.shape[1], rect[1]+rect[3])]
     arr = arr[v0[0]:v1[0],v0[1]:v1[1],...]
@@ -322,7 +328,7 @@ class RenderFont(object):
 
         # crop the surface to fit the text:
         bbs = np.array(bbs)
-        surf_arr, bbs = crop_safe(pygame.surfarray.pixels_alpha(surf), rect_union, bbs, pad=5)
+        surf_arr, bbs = crop_safe(pygame.surfarray.pixels_alpha(surf), rect_union, bbs, pad=5, rotated=True)
         surf_arr = surf_arr.swapaxes(0,1)
         return surf_arr, word_text, bbs
 
