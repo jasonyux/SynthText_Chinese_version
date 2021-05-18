@@ -197,7 +197,7 @@ class RenderFont(object):
         surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
         
         bbs = []
-        space = font.get_rect('o')
+        space = font.get_rect(' ')
         x, y = 0, 0
 
         for ch in word_text: # render each character

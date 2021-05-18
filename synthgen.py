@@ -553,7 +553,9 @@ class RendererV3(object):
         r0 = test_rectangles[0]
         union_rect = r0.unionall(test_rectangles)
         logging.debug("added {} with word rect {}".format(text.encode('utf-8'), union_rect))
-        redo = False
+        # correction, otherwise pygame does not work correctly
+        union_rect.x = 0 if union_rect.x < 0 else union_rect.x
+        union_rect.y = 0 if union_rect.y < 0 else union_rect.y
         for rect in self.placed_rects:
             if pygame.Rect.colliderect(rect, union_rect):
                 logging.info(colorize(Color.RED, "collided newrect{} with {}".format(union_rect, rect)))
@@ -648,13 +650,21 @@ class RendererV3(object):
         # fix for rotated text
         num_boxes = len(wordBB[0][0])
         for i in range(num_boxes):
-            bottomright = [wordBB[0][2][i], wordBB[1][2][i]]
+            topleft = [wordBB[0][0][i], wordBB[1][0][i]]
             topright = [wordBB[0][1][i], wordBB[1][1][i]]
+            bottomright = [wordBB[0][2][i], wordBB[1][2][i]]
+            bottomleft = [wordBB[0][3][i], wordBB[1][3][i]]
+            
             if topright[1] > bottomright[1]:
                 # need fix, topright_y should always be smaller than bottomright_y
                 logging.debug(colorize(Color.RED, "wordBB correction"))
                 wordBB[0][2][i], wordBB[1][2][i] = topright
                 wordBB[0][1][i], wordBB[1][1][i] = bottomright
+            if topleft[1] > bottomleft[1]:
+                # need fix, topleft_y should always be smaller than bottomleft_y
+                logging.debug(colorize(Color.RED, "wordBB correction"))
+                wordBB[0][0][i], wordBB[1][0][i] = bottomleft
+                wordBB[0][3][i], wordBB[1][3][i] = topleft
         logging.debug("computed wordBB {}, botright={} topright={}".format(wordBB, bottomright, topright))
 
         return wordBB
