@@ -23,6 +23,7 @@ from common import *
 import traceback, itertools
 import pygame
 import logging
+import math
 
 
 class TextRegions(object):
@@ -518,6 +519,49 @@ class RendererV3(object):
             text_mask,loc,bb,text = render_res
             #text=text.decode('utf-8')
         
+        # update the collision mask with text:
+        collision_mask += (255 * (text_mask>0)).astype('uint8')
+
+        # warp the object mask back onto the image, or leave them parallel to image
+        # if this is False, then text will be parallel to the image 
+        # (i.e. normal of the text surface the same as the normal of the image)
+        if np.random.rand() > self.p_parallel:
+            text_mask_orig = text_mask.copy()
+            bb_orig = bb.copy()
+            text_mask = self.warpHomography(text_mask,H,rgb.shape[:2][::-1])
+            bb = self.homographyBB(bb,Hinv)
+            if not self.bb_filter(bb_orig,bb,text):
+                colorize(Color.RED, 'bad charBB statistics')
+                #warn("bad charBB statistics")
+                return #None
+        
+        #TODO: add collision detection here?
+        temp_cbb = np.concatenate([bb], axis=2)
+        temp_wbb = self.char2wordBB(temp_cbb.copy(), ' '.join(text))
+        # compute the rectangle union
+        num_boxes = len(temp_wbb[0][0])
+        test_rectangles = []
+        for i in range(num_boxes):
+            topleft = [temp_wbb[0][0][i], temp_wbb[1][0][i]]
+            topright = [temp_wbb[0][1][i], temp_wbb[1][1][i]]
+            bottomright = [temp_wbb[0][2][i], temp_wbb[1][2][i]]
+            rect_width = math.sqrt((topright[0]-bottomright[0])**2 + (topright[1]-bottomright[1])**2)
+            rect_height = math.sqrt((topright[0]-topleft[0])**2 + (topright[1]-topleft[1])**2)
+            word_rect = pygame.Rect(topleft[0], topleft[1], rect_width, rect_height)
+            test_rectangles.append(word_rect)
+
+        r0 = test_rectangles[0]
+        union_rect = r0.unionall(test_rectangles)
+        logging.debug("added {} with word rect {}".format(text.encode('utf-8'), union_rect))
+        redo = False
+        for rect in self.placed_rects:
+            if pygame.Rect.colliderect(rect, union_rect):
+                logging.info(colorize(Color.RED, "collided newrect{} with {}".format(union_rect, rect)))
+                return None
+        # update the collision region
+        self.placed_rects.append(union_rect)
+        
+        """
         bbx = bb.tolist()[0]
         bby = bb.tolist()[1]
         num_boxes = len(bbx[0])
@@ -541,22 +585,7 @@ class RendererV3(object):
         # update already placed text regions
         self.placed_rects.append(rect_union)
         logging.info(colorize(Color.RED, "added newrect{} with {}".format(rect_union, text.encode('utf-8'))))
-        
-        # update the collision mask with text:
-        collision_mask += (255 * (text_mask>0)).astype('uint8')
-
-        # warp the object mask back onto the image, or leave them parallel to image
-        # if this is False, then text will be parallel to the image 
-        # (i.e. normal of the text surface the same as the normal of the image)
-        if np.random.rand() > self.p_parallel:
-            text_mask_orig = text_mask.copy()
-            bb_orig = bb.copy()
-            text_mask = self.warpHomography(text_mask,H,rgb.shape[:2][::-1])
-            bb = self.homographyBB(bb,Hinv)
-            if not self.bb_filter(bb_orig,bb,text):
-                colorize(Color.RED, 'bad charBB statistics')
-                #warn("bad charBB statistics")
-                return #None
+        """
 
         # get the minimum height of the character-BB:
         min_h = self.get_min_h(bb,text)
@@ -617,7 +646,6 @@ class RendererV3(object):
             wordBB[:,:,i] = box[perm4[np.argmin(dists)],:].T
 
         # fix for rotated text
-        #TODO: add collision detection here?
         num_boxes = len(wordBB[0][0])
         for i in range(num_boxes):
             bottomright = [wordBB[0][2][i], wordBB[1][2][i]]

@@ -596,7 +596,7 @@ class FontState(object):
     Defines the random state of the font rendering  
     """
     size = [50, 10]  # normal dist mean, std
-    underline = 0.05
+    underline = 0.00 # disabled underline
     strong = 0.5
     oblique = 0.2
     wide = 0.5
