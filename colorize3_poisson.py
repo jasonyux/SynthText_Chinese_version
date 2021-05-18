@@ -290,6 +290,18 @@ class Colorize(object):
         col_text[2] = get_sample(col_text[2]) # value
         return np.squeeze(cv.cvtColor(col_text[None,None,:],cv.COLOR_HSV2RGB))
 
+    # Sum of the min & max of (a, b, c)
+    def hilo(self, a, b, c):
+        if c < b: b, c = c, b
+        if b < a: a, b = b, a
+        if c < b: b, c = c, b
+        return a + c
+
+    def my_complement(self, color_rgb):
+        r, g, b = color_rgb
+        k = self.hilo(r, g, b)
+        return tuple(k - u for u in (r, g, b))
+
     def color_text(self, text_arr, h, bg_arr):
         """
         Decide on a color for the text:
@@ -305,16 +317,19 @@ class Colorize(object):
         fg_col,bg_col = self.font_color.sample_from_data(bg_arr)
         
         choice = np.random.rand()
-        logging.debug("bg_color={}, fg_color={}".format(bg_col, fg_col))
-        if choice < 0.3: #30% probability of having high contrast color
-            # formula from https://gamedev.stackexchange.com/questions/38536/given-a-rgb-color-x-how-to-find-the-most-contrasting-color-y
+        # fg_color contains the mean of the image color
+        comp_col = self.my_complement(list(fg_col))
+        """
+        if choice < 1.0: #30% probability of having high contrast color
             luma = 0.2126 * fg_col[0] + 0.7152 * fg_col[1] + 0.0722 * fg_col[2];
             use_black = ( luma > 0.5 )
             if luma:
                 fg_col = np.array([0,0,0])
             else:
                 fg_col = np.array([255,255,255])
-            logging.debug("bg_color={}, fg_color={}".format(bg_col, fg_col))
+        """
+        fg_col = np.array(comp_col)
+        logging.debug("bg_color={}, fg_color={}".format(bg_col, fg_col))
         return Layer(alpha=text_arr, color=fg_col), fg_col, bg_col
 
 
