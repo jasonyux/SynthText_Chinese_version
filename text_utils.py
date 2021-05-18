@@ -842,9 +842,32 @@ class TextSource(object):
         else:
             return lines
 
+    def valid_ch_range(self):
+        # use it inclusively
+        regular_range = (u'\U00000021', u'\U0000007F')
+        chj_ideo_range = (u'\u4e00', u'\u9fff')
+        chj_ideo_ext_a_range = (u'\u3400', u'\u4dbf')
+        chj_ideo_ext_b_range = (u'\U00020000', u'\U0002A6DF')
+        chj_ideo_ext_c_range = (u'\U0002A700', u'\U0002B73F')
+        chj_ideo_ext_d_range = (u'\U0002B740', u'\U0002B81F')
+        chj_ideo_ext_e_range = (u'\U0002B820', u'\U0002CEAF')
+        chj_punctuations_range = (u'\uFE50', u'\uFF65')
+        chj_punctuations_range_a = (u'\u3001', u'\u3002')
+        chj_punctuations_range_b = (u'\u201c', u'\u2027')
+        return [regular_range, chj_ideo_range, 
+                chj_ideo_ext_a_range, chj_ideo_ext_b_range, chj_ideo_ext_c_range, chj_ideo_ext_d_range, chj_ideo_ext_e_range, 
+                chj_punctuations_range, chj_punctuations_range_a, chj_punctuations_range_b]
+
     def is_emoji(self, ch):
-        emoji_start = u'\U0001f600'
-        return ch > emoji_start
+        valid_ranges = self.valid_ch_range()
+        for valid_range in valid_ranges:
+            start = valid_range[0]
+            end = valid_range[1]
+            if ch >= start and ch <= end:
+                #logging.debug("{} is valid for start={}".format(repr(ch.encode('utf-8')), start))
+                return False
+        #emoji_start = u'\U0001f600'
+        return True
 
     def strip_emoji_from_word(self, word):
         word = list(word)

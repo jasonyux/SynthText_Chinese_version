@@ -14,6 +14,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt 
 import h5py 
 from common import *
+import logging
 
 def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0, image_name=None):
     """
@@ -68,16 +69,18 @@ def main(db_fname):
         txt = db['data'][k].attrs['txt']
 
         viz_textbb(rgb, [charBB], wordBB, image_name=k)
-        print "image name        : ", colorize(Color.RED, k, bold=True)
-        print "  ** no. of chars : ", colorize(Color.YELLOW, charBB.shape[-1])
-        print "  ** no. of words : ", colorize(Color.YELLOW, wordBB.shape[-1])
-        print "  ** text         : ", colorize(Color.GREEN, "--".join(txt))
+        logging.info(colorize(Color.RED, "image name        : {}".format(k.encode('utf-8')), bold=True))
+        logging.info(colorize(Color.YELLOW, "  ** no. of chars : {}".format(charBB.shape[-1]) ))
+        logging.info(colorize(Color.YELLOW, "  ** no. of words : {}".format(wordBB.shape[-1]) ))
+        logging.info(colorize(Color.GREEN, "  ** text         : {}".format("--".join(txt)) ))
+        logging.info(colorize(Color.GREEN, "  ** raw_text         : {}".format(repr("--".join(txt))) ))
 
         #if 'q' in raw_input("next? ('q' to exit) : "):
         #    break
     db.close()
 
 if __name__=='__main__':
+    logging.basicConfig(level=logging.DEBUG)
     #main('results/SynthText.h5')
     main('results/SynthText_game_3000.h5')
 
