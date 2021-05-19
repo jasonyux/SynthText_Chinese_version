@@ -142,11 +142,11 @@ class RenderFont(object):
 
     # configures the distribution
     def configure(self, conf_args):
-        if conf_args.vertical > 0 and conf_args.vertical < 1:
+        if conf_args.vertical >= 0 and conf_args.vertical <= 1:
             self.p_vertical = conf_args.vertical
-        if conf_args.rotated > 0 and conf_args.rotated < 1:
+        if conf_args.rotated >= 0 and conf_args.rotated <= 1:
             self.p_rotated = conf_args.rotated
-        if conf_args.curved > 0 and conf_args.curved < 1:
+        if conf_args.curved >= 0 and conf_args.curved <= 1:
             self.p_curved = conf_args.curved
         logging.info(colorize(Color.BLUE, "configured p_vert={} p_rot={} p_curved={}".format(self.p_vertical, self.p_rotated, self.p_curved)))
 
@@ -246,7 +246,7 @@ class RenderFont(object):
 
         # crop the surface to fit the text:
         bbs = np.array(bbs)
-        surf_arr, bbs = crop_safe(pygame.surfarray.pixels_alpha(surf), rect_union, bbs, pad=5, rotated=rotated)
+        surf_arr, bbs = crop_safe(pygame.surfarray.pixels_alpha(surf), rect_union, bbs, pad=5)
         surf_arr = surf_arr.swapaxes(0,1)
         return surf_arr, word_text, bbs
 

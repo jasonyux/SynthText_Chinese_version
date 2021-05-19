@@ -393,10 +393,11 @@ class RendererV3(object):
 
     # configuration from commandline
     def configure(self, conf_args):
-        if conf_args.homograph > 0 and conf_args.homograph < 1:
+        if conf_args.homograph >= 0 and conf_args.homograph <= 1:
             self.p_parallel = 1.0 - conf_args.homograph
         logging.info(colorize(Color.BLUE, "configured p_parallel={}".format(self.p_parallel)))
         self.text_renderer.configure(conf_args)
+        self.colorizer.configure(conf_args)
 
     def filter_regions(self,regions,filt):
         """

@@ -211,6 +211,8 @@ if __name__=='__main__':
   parser.add_argument('--vertical',type=float, dest='vertical',default=0.2,help='probability of text having vertical alignment.')
   parser.add_argument('--rotated',type=float, dest='rotated',default=0.2,help='probability of text being rotated.')
   parser.add_argument('--curved',type=float, dest='curved',default=0.1,help='probability of text being curved in alignment.')
+  parser.add_argument('--contrast',type=float, dest='contrast',default=0.8,help='probability of text having a high contrast color.')
+  parser.add_argument('--opaque',type=float, dest='opaque',default=0.8,help='probability of text being fully opaque.')
   args = parser.parse_args()
 
   logging.basicConfig(level=logging.DEBUG)
