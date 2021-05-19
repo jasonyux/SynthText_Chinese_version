@@ -223,6 +223,7 @@ class RenderFont(object):
         # ch_bounds = font.render_to(surf, (x,y), word_text[0])
         ch_bounds = font.get_rect(word_text[0])
         y += ch_bounds.height + 2 #for padding
+        first_width = ch_bounds.width
 
         for ch in word_text: # render each character
             if ch.isspace(): # just shift
@@ -378,7 +379,7 @@ class RenderFont(object):
         rotation = True if np.random.rand() < self.p_rotated else False
         vertical = True if np.random.rand() < self.p_vertical else False
         # TODO: this branching could be improved
-        if not isword or wl > 10 or (not rotation and not verical):
+        if not isword or wl > 10 or (not rotation and not vertical):
             # horizontal not rotated
             logging.debug("going multiline")
             return self.render_multiline(font, word_text)

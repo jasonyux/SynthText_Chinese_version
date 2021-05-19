@@ -318,7 +318,11 @@ class Colorize(object):
         
         choice = np.random.rand()
         # fg_color contains the mean of the image color
-        comp_col = self.my_complement(list(fg_col))
+        # wanting to get high contrast color
+        # fg_col = np.array(self.my_complement(list(fg_col)))
+        # bg_col = np.array(self.my_complement(list(bg_col)))
+        fg_col = self.font_color.complement(fg_col)
+        bg_col = self.font_color.complement(bg_col)
         """
         if choice < 1.0: #30% probability of having high contrast color
             luma = 0.2126 * fg_col[0] + 0.7152 * fg_col[1] + 0.0722 * fg_col[2];
@@ -328,8 +332,8 @@ class Colorize(object):
             else:
                 fg_col = np.array([255,255,255])
         """
-        fg_col = np.array(comp_col)
         logging.debug("bg_color={}, fg_color={}".format(bg_col, fg_col))
+        #fg_col = np.array([0,0,0])
         return Layer(alpha=text_arr, color=fg_col), fg_col, bg_col
 
 
@@ -346,7 +350,10 @@ class Colorize(object):
         bg_col = np.mean(np.mean(bg_arr,axis=0),axis=0)
         l_bg = Layer(alpha=255*np.ones_like(text_arr,'uint8'),color=bg_col)
 
-        l_text.alpha = l_text.alpha * np.clip(0.88 + 0.1*np.random.randn(), 0.72, 1.0)
+        #l_text.alpha = l_text.alpha * np.clip(0.88 + 0.1*np.random.randn(), 0.72, 1.0)
+        # l_text.alpha
+        logging.debug("alpha picked {}".format(l_text.alpha))
+
         layers = [l_text]
         blends = []
 
@@ -376,7 +383,7 @@ class Colorize(object):
             else: shift = 15 + 3*np.random.randn()
 
             # opacity:
-            op = 0.50 + 0.1*np.random.randn()
+            op = 0.70 + 0.1*np.random.randn()
 
             shadow = self.drop_shadow(l_text.alpha, theta, shift, 3*bsz, op)
             l_shadow = Layer(shadow, 0)
