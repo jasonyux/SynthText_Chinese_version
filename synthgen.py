@@ -370,6 +370,7 @@ class RendererV3(object):
 
     def __init__(self, data_dir, max_time=None):
         self.text_renderer = tu.RenderFont(data_dir)
+
         self.colorizer = Colorize(data_dir)
         #self.colorizerV2 = colorV2.Colorize(data_dir)
 
@@ -389,6 +390,13 @@ class RendererV3(object):
     # clean up after an image is done
     def reset(self):
         self.placed_rects = []
+
+    # configuration from commandline
+    def configure(self, conf_args):
+        if conf_args.homograph > 0 and conf_args.homograph < 1:
+            self.p_parallel = 1.0 - conf_args.homograph
+        logging.info(colorize(Color.BLUE, "configured p_parallel={}".format(self.p_parallel)))
+        self.text_renderer.configure(conf_args)
 
     def filter_regions(self,regions,filt):
         """

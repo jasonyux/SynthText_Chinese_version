@@ -140,6 +140,17 @@ class RenderFont(object):
 
         pygame.init()
 
+    # configures the distribution
+    def configure(self, conf_args):
+        if conf_args.vertical > 0 and conf_args.vertical < 1:
+            self.p_vertical = conf_args.vertical
+        if conf_args.rotated > 0 and conf_args.rotated < 1:
+            self.p_rotated = conf_args.rotated
+        if conf_args.curved > 0 and conf_args.curved < 1:
+            self.p_curved = conf_args.curved
+        logging.info(colorize(Color.BLUE, "configured p_vert={} p_rot={} p_curved={}".format(self.p_vertical, self.p_rotated, self.p_curved)))
+
+
     def render_multiline(self,font,text):
         """
         renders multiline TEXT on the pygame surface SURF with the

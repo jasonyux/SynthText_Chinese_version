@@ -133,10 +133,9 @@ def rgb2gray(image):
     return gray
 
 
-def main(viz=False):
+def main(args, viz=False):
   # open databases:
   logging.info(colorize(Color.BLUE,'getting data..',bold=True))
-  
   #add more data into the dset
   depth_db = h5py.File(DEPTH_PATH,'r')
   seg_db = h5py.File(SEG_PATH,'r')
@@ -149,6 +148,7 @@ def main(viz=False):
   logging.info(colorize(Color.GREEN,'Storing the output in: '+OUT_FILE, bold=True))
 
   RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG)
+  RV3.configure(args)
 
   for imname in imnames[50:155]:
     # ignore if not in filetered list:
@@ -207,7 +207,11 @@ if __name__=='__main__':
   import argparse
   parser = argparse.ArgumentParser(description='Genereate Synthetic Scene-Text Images')
   parser.add_argument('--viz',action='store_true',dest='viz',default=False,help='flag for turning on visualizations')
+  parser.add_argument('--homograph',type=float, dest='homograph',default=0.1,help='probability of text blended into scene.')
+  parser.add_argument('--vertical',type=float, dest='vertical',default=0.2,help='probability of text having vertical alignment.')
+  parser.add_argument('--rotated',type=float, dest='rotated',default=0.2,help='probability of text being rotated.')
+  parser.add_argument('--curved',type=float, dest='curved',default=0.1,help='probability of text being curved in alignment.')
   args = parser.parse_args()
 
   logging.basicConfig(level=logging.DEBUG)
-  main(args.viz)
+  main(args)
