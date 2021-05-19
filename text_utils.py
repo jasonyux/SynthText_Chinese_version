@@ -212,7 +212,117 @@ class RenderFont(object):
         isword = len(word_text.split())==1
         lspace = font.get_sized_height() + 1
         lbound = font.get_rect(word_text)
-        fsize = (round(2.0*lbound.width), round(wl*lspace))
+        fsize = (round(2.0*lbound.width), round(3*lspace))
+        surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
+
+        angle = 0
+        if rotated:
+            angle = np.random.randint(low=10, high=80)
+        logging.debug("angle={}".format(angle))
+        surf = pygame.transform.rotate(surf, angle)
+
+        # baseline state
+        mid_idx = wl//2
+        
+        BS = self.baselinestate.get_sample()
+        curve = [BS['curve'](i-mid_idx) for i in xrange(wl)]
+        rots  = [angle for i in xrange(wl)]
+        
+        bbs = []
+        # place middle char
+        rect = font.get_rect(word_text[mid_idx])
+        rect.centerx = surf.get_rect().centerx
+        rect.centery = surf.get_rect().centery + rect.height
+        rect.centery +=  curve[mid_idx]
+        ch_bounds = font.render_to(surf, rect, word_text[mid_idx], rotation=rots[mid_idx])
+        ch_bounds.x = rect.x + ch_bounds.x
+        ch_bounds.y = rect.y - ch_bounds.y
+        mid_ch_bb = np.array(ch_bounds)
+
+        logging.debug(colorize(Color.RED, "[{}]th=mid char {} with y at {}".format(mid_idx, word_text[mid_idx].encode('utf-8'), rect.y)))
+        logging.debug(colorize(Color.RED, "newrect at {}".format(rect)))
+
+        # render chars to the left and right:
+        last_rect = rect
+        ch_idx = []
+        for i in xrange(wl):
+            #skip the middle character
+            if i==mid_idx: 
+                bbs.append(mid_ch_bb)
+                ch_idx.append(i)
+                continue
+
+            if i < mid_idx: #left-chars
+                i = mid_idx-1-i
+            elif i==mid_idx+1: #right-chars begin
+                last_rect = rect
+
+            ch_idx.append(i)
+            ch = word_text[i]
+
+            newrect = font.get_rect(ch)
+            newrect.y = last_rect.y
+
+            logging.debug("{} top={} left={}, x={}, y={}, topleft={}, bottomright={}".format(
+            type(newrect), newrect.top, newrect.left, newrect.x, newrect.y, newrect.topleft, newrect.bottomright))
+
+            if i > mid_idx:
+                newrect.topleft = (last_rect.topright[0]+2, newrect.topleft[1])
+            else:
+                newrect.topright = (last_rect.topleft[0]-2, newrect.topleft[1])
+
+            # do rotation without curving, verical x angle cc is same as horizontal 90-x angle c
+            angle = 90 - angle 
+            if angle <= 45:
+                y_dist = math.tan(math.radians(angle)) * ((last_rect.width + newrect.width)/2.0)
+                logging.debug("grad={}, y_dist={}".format(math.tan(math.radians(angle)), y_dist))
+                if i > mid_idx:
+                    newrect.centery += y_dist
+                else:
+                    newrect.centery -= y_dist
+            else: # now, instead of shifting y, I shift x
+                y_dist = ((last_rect.height + newrect.height)/2.0) + 2 # no y-overlap
+                x_dist = ((last_rect.width + newrect.width)/2.0) - (y_dist / math.tan(math.radians(angle)))
+                logging.debug("grad={}, y_dist={}, x_dist={}".format(math.tan(math.radians(angle)), y_dist, x_dist))
+                if i > mid_idx:
+                    newrect.centery += y_dist
+                    newrect.centerx -= x_dist
+                else:
+                    newrect.centery -= y_dist
+                    newrect.centerx += x_dist
+                
+            logging.debug(colorize(Color.RED, "[{}]th char {} with y at {}".format(i, ch.encode('utf-8'), newrect.y)))
+            logging.debug(colorize(Color.RED, "moved newrect at {}".format(newrect)))
+            try:
+                bbrect = font.render_to(surf, newrect, ch, rotation=rots[i])
+            except ValueError:
+                bbrect = font.render_to(surf, newrect, ch)
+            bbrect.x = newrect.x + bbrect.x
+            bbrect.y = newrect.y - bbrect.y
+            bbs.append(np.array(bbrect))
+            last_rect = newrect
+        
+        # correct the bounding-box order:
+        bbs_sequence_order = [None for i in ch_idx]
+        for idx,i in enumerate(ch_idx):
+            bbs_sequence_order[i] = bbs[idx]
+        bbs = bbs_sequence_order
+
+        # get the union of characters for cropping:
+        r0 = pygame.Rect(bbs[0])
+        rect_union = r0.unionall(bbs)
+
+        # crop the surface to fit the text:
+        bbs = np.array(bbs)
+        surf_arr, bbs = crop_safe(pygame.surfarray.pixels_alpha(surf), rect_union, bbs, pad=5, rotated=True)
+        surf_arr = surf_arr.swapaxes(0,1)
+        return surf_arr, word_text, bbs
+        """
+        wl = len(word_text)
+        isword = len(word_text.split())==1
+        lspace = font.get_sized_height() + 1
+        lbound = font.get_rect(word_text)
+        fsize = (round(wl*lbound.width), round(wl*lspace))
         surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
         
         bbs = []
@@ -220,7 +330,8 @@ class RenderFont(object):
         x, y = 0, 0
 
         # y needs to be offsetted for correct rendering
-        ch_bounds = font.render_to(surf, (x,y), word_text[0])
+        # ch_bounds = font.render_to(surf, (x,y), word_text[0])
+        ch_bounds = font.get_rect(word_text[0])
         ch_bounds.y = y - ch_bounds.y
         y += ch_bounds.height + 2 #for padding
         first_width = ch_bounds.width
@@ -230,6 +341,7 @@ class RenderFont(object):
         rots  = [-angle for i in xrange(wl)]
         if rotated:
             angle = np.random.randint(low=10, high=80)
+            surf = pygame.transform.rotate(surf, -angle)
         logging.debug(colorize(Color.RED, "vertical angle={}".format(angle)))
         
         last_w = None
@@ -257,7 +369,8 @@ class RenderFont(object):
                         x -= x_diff
                         last_h = space.height
                     else:
-                        temp = font.render_to(surf, (x,y), ch)
+                        # temp = font.render_to(surf, (x,y), ch)
+                        temp = font.get_rect(ch)
                         # render the character
                         # center align it
                         x -= (first_width - temp.width)/2.0
@@ -267,6 +380,7 @@ class RenderFont(object):
                         last_h = temp.height
 
                         ch_bounds = font.render_to(surf, (x,y), ch, rotation=-angle)
+                        logging.debug("x,y={},{}, ch.x,ch.y={},{}".format(x,y,ch_bounds.x,ch_bounds.y))
         
                         ch_bounds.y = y - ch_bounds.y
                         #x += ch_bounds.width
@@ -307,6 +421,7 @@ class RenderFont(object):
         surf_arr, bbs = crop_safe(pygame.surfarray.pixels_alpha(surf), rect_union, bbs, pad=5, rotated=rotated)
         surf_arr = surf_arr.swapaxes(0,1)
         return surf_arr, word_text, bbs
+        """
 
 
     def render_rotated(self, font, word_text):
@@ -429,7 +544,7 @@ class RenderFont(object):
         rand = np.random.rand()
         rotation = True if np.random.rand() < self.p_rotated else False
         # TODO: this branching could be improved
-        if not isword or wl > 10 or rand > (1.0-self.p_curved) or not rotation:
+        if not isword or wl > 10 or (not rotation and rand > self.p_vertical):
             # horizontal not rotated
             logging.debug("going multiline")
             return self.render_multiline(font, word_text)
