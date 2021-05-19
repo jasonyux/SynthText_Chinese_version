@@ -216,9 +216,10 @@ class RenderFont(object):
         first_height = ch_bounds.height
 
         angle = 0
+        rots  = [-angle for i in xrange(wl)]
         if rotated:
             angle = np.random.randint(low=10, high=80)
-        logging.debug(colorize(Color.RED, "angle={}".format(angle)))
+        logging.debug(colorize(Color.RED, "vertical angle={}".format(angle)))
         
         last_w = None
         last_h = None
@@ -254,7 +255,7 @@ class RenderFont(object):
                         x -= x_diff
                         last_h = temp.height
 
-                        ch_bounds = font.render_to(surf, (x,y), ch)
+                        ch_bounds = font.render_to(surf, (x,y), ch, rotation=-angle)
         
                         ch_bounds.y = y - ch_bounds.y
                         #x += ch_bounds.width
@@ -264,7 +265,7 @@ class RenderFont(object):
                     if ch.isspace(): # just shift
                         x -= space.width
                         # if last_w==None, we are dealing with the first character
-                        y_diff = 0 if last_w is None else ((last_w + space.width)/2) * (1/math.tan(math.radians(angle)))
+                        y_diff = 0 if last_w is None else ((last_w + space.width)/2) * (1.0/math.tan(math.radians(angle)))
                         y += y_diff
                         last_w = space.width
                     else:
@@ -273,11 +274,11 @@ class RenderFont(object):
                         # center align it
                         y += (first_height - temp.height)/2.0
                         # compute shift
-                        y_diff = 0 if last_w is None else ((last_w + temp.width)/2) * (1/math.tan(math.radians(angle)))
+                        y_diff = 0 if last_w is None else ((last_w + temp.width)/2) * (1.0/math.tan(math.radians(angle)))
                         y += y_diff
                         last_w = temp.width
 
-                        ch_bounds = font.render_to(surf, (x,y), ch)
+                        ch_bounds = font.render_to(surf, (x,y), ch, rotation=-angle)
         
                         ch_bounds.y = y - ch_bounds.y
                         #x += ch_bounds.width
@@ -292,7 +293,7 @@ class RenderFont(object):
 
         # crop the surface to fit the text:
         bbs = np.array(bbs)
-        surf_arr, bbs = crop_safe(pygame.surfarray.pixels_alpha(surf), rect_union, bbs, pad=5)
+        surf_arr, bbs = crop_safe(pygame.surfarray.pixels_alpha(surf), rect_union, bbs, pad=5, rotated=rotated)
         surf_arr = surf_arr.swapaxes(0,1)
         return surf_arr, word_text, bbs
 
