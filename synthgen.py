@@ -570,32 +570,6 @@ class RendererV3(object):
                 return None
         # update the collision region
         self.placed_rects.append(union_rect)
-        
-        """
-        bbx = bb.tolist()[0]
-        bby = bb.tolist()[1]
-        num_boxes = len(bbx[0])
-        bbs = []
-        for pos in range(num_boxes):
-            left = bbx[0][pos]
-            top = bby[0][pos]
-            width = abs(bbx[1][pos] - bbx[0][pos])
-            height = abs(bby[-1][pos] - bby[0][pos])
-            bbs.append(pygame.Rect(left, top, width, height))
-
-        r0 = pygame.Rect(bbs[0])
-        rect_union = r0.unionall(bbs)
-        # detect collision among already placed rects/words
-        for rect in self.placed_rects:
-            #TODO: if collided, return None
-            if pygame.Rect.colliderect(rect, rect_union):
-                logging.info(colorize(Color.RED, "collided newrect{} with {}".format(rect_union, rect)))
-                return None
-        
-        # update already placed text regions
-        self.placed_rects.append(rect_union)
-        logging.info(colorize(Color.RED, "added newrect{} with {}".format(rect_union, text.encode('utf-8'))))
-        """
 
         # get the minimum height of the character-BB:
         min_h = self.get_min_h(bb,text)
@@ -656,6 +630,7 @@ class RendererV3(object):
             wordBB[:,:,i] = box[perm4[np.argmin(dists)],:].T
 
         # fix for rotated text
+        logging.debug("original wordBB {}".format(wordBB))
         num_boxes = len(wordBB[0][0])
         for i in range(num_boxes):
             topleft = [wordBB[0][0][i], wordBB[1][0][i]]
@@ -686,7 +661,7 @@ class RendererV3(object):
                     logging.debug(colorize(Color.RED, "wordBB correction"))
                     wordBB[0][0][i], wordBB[1][0][i] = bottomleft
                     wordBB[0][3][i], wordBB[1][3][i] = topleft
-        logging.debug("computed wordBB {}, botright={} topright={}".format(wordBB, bottomright, topright))
+        logging.debug("fixed wordBB {}, botright={} topright={}".format(wordBB, bottomright, topright))
 
         return wordBB
 

@@ -431,13 +431,17 @@ class RenderFont(object):
         # TODO: this branching could be improved
         if not isword or wl > 10 or rand > (1.0-self.p_curved) or not rotation:
             # horizontal not rotated
+            logging.debug("going multiline")
             return self.render_multiline(font, word_text)
         elif rand < self.p_curved or wl <= 2:
             # curved, continue
+            logging.debug("going curved")
             pass
         elif rand < self.p_vertical: #vertical rotated
+            logging.debug("going vertical")
             return self.render_vertical(font, word_text, rotated=rotation)
         else: # horizontal rotated
+            logging.debug("going rotated")
             return self.render_rotated(font, word_text)
 
         # create the surface:
@@ -639,7 +643,7 @@ class RenderFont(object):
 
             # sample text:
             text_type = sample_weighted(self.p_text)
-            text = self.text_source.sample(nline,nchar,text_type)
+            text = self.text_source.sample(nline,nchar,kind=text_type,font=font)
             #text = self.text_source.sample(nline,nchar,'PARA')
             #text = self.text_source.sample(nline,nchar,'WORD')
             
@@ -939,30 +943,44 @@ class TextSource(object):
                 chj_ideo_ext_a_range, chj_ideo_ext_b_range, chj_ideo_ext_c_range, chj_ideo_ext_d_range, chj_ideo_ext_e_range, 
                 chj_punctuations_range, chj_punctuations_range_a, chj_punctuations_range_b]
 
-    def is_emoji(self, ch):
+    def cannot_render(self, ch, font):
+        # this does not check for the case when @ch renders to a box
+        if ch.isspace():
+            return False
+        x,y=0,0
+        fsize = (10,10)
+        surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
+
+        ch_bounds = font.render_to(surf, (x,y), ch)
+        return ch_bounds.width == 0
+
+
+    def is_emoji(self, ch, font):
+        # prevents rendering boxes instead of text
         valid_ranges = self.valid_ch_range()
         for valid_range in valid_ranges:
             start = valid_range[0]
             end = valid_range[1]
             if ch >= start and ch <= end:
                 #logging.debug("{} is valid for start={}".format(repr(ch.encode('utf-8')), start))
-                return False
+                return self.cannot_render(ch, font)
         #emoji_start = u'\U0001f600'
         return True
 
-    def strip_emoji_from_word(self, word):
+
+    def strip_emoji_from_word(self, word, font):
         word = list(word)
         result = []
         for char in word:
-            if not self.is_emoji(char):
+            if not self.is_emoji(char, font):
                 result.append(char)
             else:
                 logging.debug(colorize(Color.RED, "stripped {}".format(char.encode('utf-8'))))
         return "".join(result)
 
-    def sample(self, nline_max,nchar_max,kind='WORD'):
+    def sample(self, nline_max,nchar_max,font=None,kind='WORD'):
         #print 'sample_output',self.fdict[kind](nline_max,nchar_max)
-        return self.fdict[kind](nline_max,nchar_max)
+        return self.fdict[kind](nline_max,nchar_max,font)
         """
         print 'is type:', type(self.fdict[kind](nline_max,nchar_max))
         encoded = [t.encode('utf-8') for t in self.fdict[kind](nline_max,nchar_max)]
@@ -971,7 +989,7 @@ class TextSource(object):
         """
         
         
-    def sample_word(self,nline_max,nchar_max,niter=100):
+    def sample_word(self,nline_max,nchar_max,font=None,niter=100):
         rand_line = self.txt[np.random.choice(len(self.txt))]                
         words = rand_line.split()
         rand_word = random.choice(words)
@@ -984,14 +1002,14 @@ class TextSource(object):
             iter += 1
         #print colorize(Color.GREEN, rand_word)
         print 'sample_word_output',rand_word
-        rand_word = self.strip_emoji_from_word(rand_word)
+        rand_word = self.strip_emoji_from_word(rand_word, font)
         if not self.is_good([rand_word])[0] or len(rand_word)>nchar_max:
             return []
         else:
             return rand_word
 
 
-    def sample_line(self,nline_max,nchar_max):
+    def sample_line(self,nline_max,nchar_max,font=None):
         nline = nline_max+1
         while nline > nline_max:
             nline = np.random.choice([1,2,3], p=self.p_line_nline)
@@ -1008,7 +1026,7 @@ class TextSource(object):
         else:
             return []
 
-    def sample_para(self,nline_max,nchar_max):
+    def sample_para(self,nline_max,nchar_max,font=None):
         # get number of lines in the paragraph:
         nline = nline_max*sstat.beta.rvs(a=self.p_para_nline[0], b=self.p_para_nline[1])
         nline = max(1, int(np.ceil(nline)))
@@ -1023,7 +1041,7 @@ class TextSource(object):
         if lines is not None:
             temp = []
             for word in lines:
-                temp.append(self.strip_emoji_from_word(word))
+                temp.append(self.strip_emoji_from_word(word, font))
             lines = temp
             # if the text is too long, it might cause segmentation error
             if len(lines) > 5:
