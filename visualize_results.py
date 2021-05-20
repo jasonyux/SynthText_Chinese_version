@@ -30,6 +30,7 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0, image_name=None):
     
     plot_charBB = True
     plot_wordBB = True
+    hide_axis = True
 
     if plot_charBB:
         # plot the character-BB:
@@ -56,6 +57,9 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0, image_name=None):
     plt.gca().set_xlim([0,W-1])
     plt.gca().set_ylim([H-1,0])
     plt.show(block=False)
+    if hide_axis:
+        plt.axis('off')
+        plt.margins(0,0)
     plt.savefig("out_images/{}.png".format(image_name.encode('utf-8')))
 
 def main(db_fname):
