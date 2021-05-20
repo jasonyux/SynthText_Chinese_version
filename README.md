@@ -55,7 +55,7 @@ python visualize_results.py
 
      ```bash
      fonts
-     ├───more_fonts
+     ├───more_font
          ├───华文隶书.TTF
      ```
 
