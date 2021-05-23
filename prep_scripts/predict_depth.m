@@ -22,7 +22,7 @@ function predict_depth()
     opts.inpaint = true;
     opts.normalize_depth = false; % limit depth to [0,1]
     %opts.imdir = '/path/to/image/dir';
-    opts.imdir = 'D:\Dropbox\Internships\2021 Tencent\work\depth_seg_images\2021-05-11';
+    opts.imdir = '../data/game_dset/images/results';
     %opts.out_h5 = '/path/to/save/output/depth.h5';
     opts.out_h5 = 'D:\Dropbox\Internships\2021 Tencent\work\depth_seg_images\result\depth.h5';
     % these should point to the pre-trained models from:

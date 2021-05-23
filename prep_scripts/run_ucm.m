@@ -6,7 +6,7 @@
 
 % path to the directory containing images, which need to be segmented
 % img_dir = 'dir/containing/images';
-img_dir = '../../depth_seg_images/2021-05-11';
+img_dir = '../data/game_dset/images/results';
 % path to the mcg/pre-trained directory.
 % mcg_dir = '/path/to/mcg/pre-trained';
 % linux/ubuntu version
