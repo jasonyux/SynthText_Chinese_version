@@ -259,7 +259,7 @@ class RenderFont(object):
         fsize = (round(2.0*lbound.width), round(3*lspace))
         surf = pygame.Surface(fsize, pygame.locals.SRCALPHA, 32)
 
-        angle = np.random.randint(low=10, high=80)
+        angle = np.random.randint(low=-89, high=89)
         logging.debug("angle={}".format(angle))
         surf = pygame.transform.rotate(surf, angle)
 
@@ -291,6 +291,14 @@ class RenderFont(object):
         # render chars to the left and right:
         last_rect = rect
         ch_idx = []
+        # do rotation without curving
+        # verical x angle cc is same as horizontal 90-x angle c
+        if vertical:
+            if angle < 0:
+                angle = -90 - angle
+            else:
+                angle = 90 - angle
+
         for i in xrange(wl):
             #skip the middle character
             if i==mid_idx: 
@@ -317,11 +325,7 @@ class RenderFont(object):
             else:
                 newrect.topright = (last_rect.topleft[0]-2, newrect.topleft[1])
 
-            # do rotation without curving
-            # verical x angle cc is same as horizontal 90-x angle c
-            if vertical:
-                angle = 90 - angle
-            if angle <= 45:
+            if abs(angle) <= 45:
                 y_dist = math.tan(math.radians(angle)) * ((last_rect.width + newrect.width)/2.0)
                 logging.debug("grad={}, y_dist={}".format(math.tan(math.radians(angle)), y_dist))
                 if i > mid_idx:

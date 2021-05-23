@@ -25,7 +25,7 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0, image_name=None):
     plt.close(1)
     plt.figure(1)
     plt.imshow(text_im)
-    plt.hold(True)
+    # plt.hold(True)
     H,W = text_im.shape[:2]
     
     plot_charBB = True
@@ -61,7 +61,7 @@ def viz_textbb(text_im, charBB_list, wordBB, alpha=1.0, image_name=None):
 def main(db_fname):
     db = h5py.File(db_fname, 'r')
     dsets = sorted(db['data'].keys())
-    print "total number of images : ", colorize(Color.RED, len(dsets), highlight=True)
+    print("total number of images : "+ colorize(Color.RED, len(dsets), highlight=True))
     for k in dsets:
         rgb = db['data'][k][...]
         charBB = db['data'][k].attrs['charBB']
